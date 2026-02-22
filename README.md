@@ -4,6 +4,7 @@
 
 ---
 
+## STILL IN DEVELOPMENT MODE! NOT YET COMPLETE
 ## 📖 Table of Contents
 
 1. [Project Overview](#1-project-overview)
