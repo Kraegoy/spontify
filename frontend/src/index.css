@@ -1,0 +1,17 @@
+/* ── Variables (shared) ── */
+:root {
+  --black: #121212;
+  --surface: #181818;
+  --surface2: #282828;
+  --green: #1db954;
+  --green-dim: #158a3e;
+  --text: #ffffff;
+  --text-muted: rgba(255, 255, 255, 0.45);
+  --black: #0a0a0a;
+  --dark: #121212;
+  --surface: #181818;
+  --surface2: #282828;
+  --text: #FFFFFF;
+  --text-dim: #b3b3b3;
+  --text-muted: #535353;
+}

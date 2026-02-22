@@ -1,0 +1,94 @@
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Mono:wght@400;500&display=swap');
+
+.navbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 24px 48px;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  backdrop-filter: blur(10px);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(10,10,10,0.8);
+}
+
+.navbar-logo {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  height: 1em;
+}
+
+
+
+
+.logo-text span {
+  color: var(--green);
+}
+
+.navbar-links {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.nav-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-dim);
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-family: 'Syne', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  letter-spacing: 0.5px;
+  transition: all 0.2s ease;
+}
+
+.nav-btn:hover {
+  color: var(--text);
+  background: var(--surface2);
+}
+
+.logout-btn {
+  background: transparent;
+  border: 1px solid var(--text-muted);
+  color: var(--text-dim);
+  padding: 8px 20px;
+  border-radius: 20px;
+  font-family: 'Syne', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  letter-spacing: 0.5px;
+  transition: all 0.2s ease;
+}
+
+.logout-btn:hover {
+  border-color: var(--text);
+  color: var(--text);
+}
+
+@media (max-width: 640px) {
+  .navbar {
+    padding: 16px 20px;
+  }
+  .navbar-links {
+    display: none;
+  }
+}
+
+.logo-icon {
+  width: 125px;
+  object-fit: contain;
+}
+
+.logo-text {
+  font-family: 'Syne', sans-serif;
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--text);
+  letter-spacing: -0.5px;
+}
