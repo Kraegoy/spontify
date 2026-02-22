@@ -29,7 +29,6 @@ export const getArtist = (artistID) => {
       artist_id: artistID
     }
   });
-
 };
 
 
@@ -51,6 +50,14 @@ export const logoutUser = () => {
 export const playTrack = (trackUri) => {
   return api.post('/play_track/', {
     track_uri: trackUri
+  });
+};
+
+export const getArtistAlbums = (artistID) => {
+  return api.get('/get_artist_albums/', {
+    params: {
+      artist_id: artistID
+    }
   });
 };
 
