@@ -12,7 +12,7 @@ SPOTIFY_CLIENT_SECRET = os.environ.get('SPOTIFY_CLIENT_SECRET')
 SPOTIFY_REDIRECT_URI = os.environ.get('SPOTIFY_REDIRECT_URI')
 FRONTEND_URL = os.environ.get('FRONTEND_URL')
 
-SECRET_KEY = 'django-insecure-d27iiy85muvpg0t3i$30)tb_hwcwq%f+kw7p3+3qwy4e^dk5&d'
+SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY')
 
 DEBUG = True
 
