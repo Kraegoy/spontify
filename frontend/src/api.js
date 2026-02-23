@@ -31,6 +31,21 @@ export const getArtist = (artistID) => {
   });
 };
 
+export const getArtistLASTFM = (artistName) => {
+  return api.get('/get_artist_info_via_last_fm/', {
+    params: {
+      artist_name: artistName
+    }
+  });
+};
+
+export const getArtistTopTracksLASTFM = (artistName) => {
+  return api.get('/get_artist_top_tracks_via_last_fm/', {
+    params: {
+      artist_name: artistName
+    }
+  });
+};
 
 export const getTopArtists = (timeRange) => {
   return api.get('/top_artists/', {
@@ -39,6 +54,15 @@ export const getTopArtists = (timeRange) => {
     }
   });
 };
+
+export const getSimilarArtists = (artistMBID) => {
+  return api.get('/get_similar_artist_links/', {
+    params: {
+      artist_mbid: artistMBID
+    }
+  });
+};
+
 
 export const getMe = () => api.get('/auth/spotify/me/')
 export const getMyPlaylists = () => api.get('/get_my_playlists/')

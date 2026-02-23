@@ -12,7 +12,10 @@ urlpatterns = [
     path('logout/', views.logout_view, name="logout"),
     path('get_artist/', views.get_artist, name="get_artist"),
     path('get_my_playlists/', views.get_my_playlists, name="get_my_playlists"),
-
+    path('get_artist_albums/', views.get_artist_albums, name="get_artist_albums"),
+    path('get_artist_info_via_last_fm/', views.get_artist_info_via_last_fm, name="get_artist_info_via_last_fm"),
+    path('get_artist_top_tracks_via_last_fm/', views.get_artist_top_tracks_via_last_fm, name="get_artist_top_tracks_via_last_fm"),
+    path('get_similar_artist_links/', views.get_similar_artist_links, name="get_similar_artist_links"),
 
 
 

@@ -220,7 +220,7 @@ def top_tracks(request, access_token):
     response = requests.get(
         'https://api.spotify.com/v1/me/top/tracks',
         headers={'Authorization': f'Bearer {access_token}'},
-        params={"time_range": time_range, "limit": 20}
+        params={"time_range": time_range, "limit": 50}
     )
 
     if not response.ok:
@@ -249,7 +249,7 @@ def top_artists(request, access_token):
     response = requests.get(
         'https://api.spotify.com/v1/me/top/artists',
         headers={'Authorization': f'Bearer {access_token}'},
-        params={"time_range": time_range, "limit": 20, "fields": "items(id,name,images,genres,followers,popularity,external_urls,uri)"}
+        params={"time_range": time_range, "limit": 50, "fields": "items(id,name,images,genres,followers,popularity,external_urls,uri)"}
     )
 
     if not response.ok:
@@ -345,7 +345,7 @@ def get_my_playlists(request, access_token):
     )
     
     if not response.ok:
-        return Response({'error': 'Failed to fetch top artists', 'status': response.status_code}, status=response.status_code)
+        return Response({'error': 'Failed to fetch playlists', 'status': response.status_code}, status=response.status_code)
 
     data = response.json()
     print("SPOTIFY DATA:", data)
@@ -354,3 +354,120 @@ def get_my_playlists(request, access_token):
     return Response(data)
 
 
+
+@api_view(["GET"])
+@spotify_auth_required
+def get_artist_albums(request, access_token):
+    artist_id = request.query_params.get('artist_id')
+    
+    cache_key = f'artist_albums-{artist_id}'
+    cached = cache.get(cache_key)
+    
+    if cached:
+        print(f"cached {cache_key}")
+        return Response(cached)
+    
+    response = requests.get(
+        f"https://api.spotify.com/v1/artists/{artist_id}/albums",
+        headers={'Authorization': f'Bearer {access_token}'}
+    )
+    
+    if not response.ok:
+        return Response({'error': 'Failed to fetch playlists', 'status': response.status_code}, status=response.status_code)
+    
+    data = response.json()
+    cache.set(cache_key, data, timeout=60*60*24)
+    return Response(data)
+
+
+@api_view(["GET"])
+@spotify_auth_required
+def get_artist_info_via_last_fm(request, access_token):
+    artist_name = request.query_params.get('artist_name')
+    
+    cache_key = f"artist-info-last-fm-{artist_name}"
+    cached = cache.get(cache_key)
+    
+    if cached:
+        print(f"cached {cache_key}")
+        return Response(cached)
+    
+    response = requests.get(
+        f"https://ws.audioscrobbler.com/2.0/",
+        params = {
+            "method": "artist.getInfo",
+            "artist": artist_name,
+            "api_key": settings.LAST_FM_API_KEY,
+            "format": "json"
+        }
+    )
+    
+    data = response.json()
+    cache.set(cache_key, data, timeout=60*60*24*3)
+    return Response(data)
+
+
+
+@api_view(["GET"])
+@spotify_auth_required
+def get_artist_top_tracks_via_last_fm(request, access_token):
+    artist_name = request.query_params.get('artist_name')
+    
+    cache_key = f"artist-top-tracks-last-fm-{artist_name}"
+    cached = cache.get(cache_key)
+    
+    if cached:
+        print(f"cached {cache_key}")
+        return Response(cached)
+    response = requests.get(
+        f"https://ws.audioscrobbler.com/2.0/",
+        params = {
+            "method": "artist.getTopTracks",
+            "artist": artist_name,
+            "api_key": settings.LAST_FM_API_KEY,
+            "format": "json"
+        }
+    )
+    
+    data = response.json()
+    cache.set(cache_key, data, timeout=60*60*24*3)
+    return Response(data)
+
+@api_view(["GET"])
+@spotify_auth_required
+def get_similar_artist_links(request, access_token):
+    artist_mbid = request.query_params.get('artist_mbid')
+    
+    if not artist_mbid:
+        return Response({"error": "artist_mbid is required"}, status=400)
+    
+    cache_key = f"artist-mbid-{artist_mbid}"
+    cached = cache.get(cache_key)
+    
+    if cached:
+        print(f"cached {cache_key}")
+        return Response(cached)
+    
+    try:
+        response = requests.get(
+            f"https://musicbrainz.org/ws/2/artist/{artist_mbid}?inc=url-rels&fmt=json",
+            headers={"User-Agent": "Spontify/1.0 (avilakraeg@gmail.com)"}
+        )
+        
+        if response.status_code != 200:
+            return Response({"error": "Failed to fetch from MusicBrainz"}, status=response.status_code)
+        
+        data = response.json()
+        relations = data.get("relations", [])
+        
+        spotify_url = next(
+            (r["url"]["resource"] for r in relations if "spotify.com/artist" in r["url"]["resource"]),
+            None
+        )
+        
+        result = {"spotify_url": spotify_url}
+        cache.set(cache_key, result, timeout=60*60*24*3)
+        return Response(result)
+    
+    except requests.exceptions.RequestException as e:
+        return Response({"error": str(e)}, status=500)
