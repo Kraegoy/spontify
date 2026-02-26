@@ -4,6 +4,7 @@ import Dashboard from './pages/Dashboard/Dashboard'
 import TopArtists from './pages/TopArtists/TopArtists'
 import ArtistProfile from './pages/ArtistProfile/ArtistProfile'
 import MyPlaylists from './pages/MyPlaylists/MyPlaylists'
+import SearchResults from './pages/SearchResults/SearchResults'
 import Loading from './components/Loading/Loading'
 
 
@@ -60,6 +61,12 @@ function App() {
         <Route path="/top_artists/:timeRange" element={
           <PrivateRoute>
             <TopArtists />
+          </PrivateRoute>
+        } />
+
+         <Route path="/search" element={
+          <PrivateRoute>
+            <SearchResults />
           </PrivateRoute>
         } />
 

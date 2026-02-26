@@ -1,140 +1,48 @@
-/* ── Tokens ── */
-:root {
-  --sp-green: #1db954;
-  --sp-green-glow: rgba(29, 185, 84, 0.25);
-  --sp-black: #0d0d0d;
-  --sp-surface: #121212;
-  --sp-elevated: #1a1a1a;
-  --sp-muted: #535353;
-  --sp-text: #ececec;
-  --sp-radius: 16px;
-  --bar-w: 5px;
-  --bar-gap: 6px;
-}
-
-/* ── Root / fullscreen overlay ── */
 .loader-root {
   position: fixed;
   inset: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--sp-black);
+  background: #0a0a0a2c;
   z-index: 9999;
-  font-family: "DM Sans", "Helvetica Neue", sans-serif;
 }
 
-/* Subtle radial glow behind the card */
-.loader-bg {
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(
-    ellipse 60% 50% at 50% 55%,
-    var(--sp-green-glow) 0%,
-    transparent 70%
-  );
-  pointer-events: none;
-}
-
-/* ── Card ── */
-.loader-card {
-  position: relative;
+.loader-inner {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 28px;
-  padding: 48px 56px;
-  background: var(--sp-elevated);
-  border-radius: var(--sp-radius);
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  box-shadow:
-    0 0 0 1px rgba(29, 185, 84, 0.08),
-    0 32px 80px rgba(0, 0, 0, 0.6);
+  gap: 20px;
 }
 
-/* ── Equaliser bars ── */
+/* ── Bars ── */
 .loader-bars {
   display: flex;
   align-items: flex-end;
-  gap: var(--bar-gap);
-  height: 36px;
+  gap: 5px;
+  height: 28px;
 }
 
 .loader-bar {
   display: block;
-  width: var(--bar-w);
-  border-radius: 99px;
-  background: var(--sp-green);
-  animation: bar-bounce 1.1s ease-in-out infinite;
-  animation-delay: calc(var(--i) * 0.15s);
+  width: 3px;
+  border-radius: 2px;
+  background: #1db954;
+  animation: bar 1s ease-in-out infinite;
+  animation-delay: calc(var(--i) * 0.12s);
 }
 
-@keyframes bar-bounce {
-  0%, 100% { height: 8px;  opacity: 0.5; }
-  50%       { height: 36px; opacity: 1;   }
+@keyframes bar {
+  0%, 100% { height: 6px;  opacity: 0.3; }
+  50%       { height: 28px; opacity: 1;   }
 }
 
-/* ── Vinyl disc ── */
-.loader-vinyl {
-  width: 80px;
-  height: 80px;
-  border-radius: 50%;
-  background: conic-gradient(
-    #1a1a1a 0deg,
-    #232323 60deg,
-    #111 120deg,
-    #1e1e1e 180deg,
-    #161616 240deg,
-    #222 300deg,
-    #1a1a1a 360deg
-  );
-  border: 3px solid var(--sp-green);
-  box-shadow:
-    0 0 20px var(--sp-green-glow),
-    inset 0 0 12px rgba(0, 0, 0, 0.6);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  animation: spin 2s linear infinite;
-}
-
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
-
-.loader-vinyl-inner {
-  width: 26px;
-  height: 26px;
-  border-radius: 50%;
-  background: var(--sp-surface);
-  border: 2px solid rgba(255, 255, 255, 0.06);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.loader-vinyl-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--sp-green);
-  box-shadow: 0 0 6px var(--sp-green);
-}
-
-/* ── Label ── */
+/* ── Dots label ── */
 .loader-label {
-  margin: 0;
-  font-size: 13px;
-  font-weight: 500;
-  letter-spacing: 0.04em;
-  color: var(--sp-muted);
-  text-transform: uppercase;
-  white-space: nowrap;
-}
-
-.loader-dots {
-  display: inline-block;
-  width: 18px;
-  letter-spacing: -1px;
-  color: var(--sp-green);
+  font-family: 'DM Mono', monospace;
+  font-size: 12px;
+  color: #1db954;
+  letter-spacing: 3px;
+  height: 16px;
+  display: block;
 }

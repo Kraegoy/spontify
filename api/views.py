@@ -537,9 +537,10 @@ def get_recently_played_tracks(request, access_token):
     
     response = requests.get(
         "https://api.spotify.com/v1/me/player/recently-played",
+        params={'limit': 50},
         headers={'Authorization': f'Bearer {access_token}'}
     )
-    
+        
     if not response.ok:
         return Response({'error': 'Failed to fetch recently played tracks', 'status': response.status_code}, status=response.status_code)
     
@@ -576,3 +577,38 @@ def call_next_api_url(request, access_token):
     cache.set(cache_key, data, 60 * 10) 
     return Response(data)  
 
+
+
+@api_view(["GET"])
+@spotify_auth_required
+def search_item(request, access_token):
+    q = request.query_params.get("q")
+
+    if not q:
+        return Response({"error": "q is required"}, status=400)
+
+    cache_key = f"search-{q}"
+    cached = cache.get(cache_key)
+    if cached:
+        print(f"cached - {cache_key}")
+        return Response(cached)
+
+    response = requests.get(
+        "https://api.spotify.com/v1/search",
+        params={
+            "q": q,
+            "limit": 10,
+            "type": "album,playlist,track,artist,episode,show,audiobook",
+            "offset": 0,
+            "include_external": "audio",
+        },
+        headers={"Authorization": f"Bearer {access_token}"}
+    )
+
+    if not response.ok:
+        return Response({"error": "Failed to search", "status": response.status_code}, status=response.status_code)
+
+    data = response.json()
+    cache.set(cache_key, data, timeout=60 * 10)
+
+    return Response(data)

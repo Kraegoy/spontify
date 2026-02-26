@@ -19,5 +19,7 @@ urlpatterns = [
     path('get_track_spotify_url/', views.get_track_spotify_url, name="get_track_spotify_url"),
     path('get_recently_played_tracks/', views.get_recently_played_tracks, name="get_recently_played_tracks"),
     path('call_next_api_url/', views.call_next_api_url, name="call_next_api_url"),
+    path('search_item/', views.search_item, name="search_item"),
+
 
 ]

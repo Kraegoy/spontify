@@ -5,6 +5,7 @@ import './Navbar.css'
 function Navbar() {
   const navigate = useNavigate()
   const [menuOpen, setMenuOpen] = useState(false)
+  const [query, setQuery] = useState('')
 
   const handleLogout = () => {
     localStorage.removeItem('access_token')
@@ -15,6 +16,13 @@ function Navbar() {
   const goTo = (path) => {
     navigate(path)
     setMenuOpen(false)
+  }
+
+  const handleSearch = (e) => {
+    e.preventDefault()
+    if (!query.trim()) return
+    goTo(`/search?q=${encodeURIComponent(query.trim())}`)
+    setQuery('')
   }
 
   return (
@@ -30,6 +38,16 @@ function Navbar() {
         <button className="nav-btn" onClick={() => goTo('/my_playlists')}>Playlist</button>
       </div>
 
+      <form className="search-form" onSubmit={handleSearch}>
+        <input
+          className="search-input"
+          type="text"
+          placeholder="Search..."
+          value={query}
+          onChange={e => setQuery(e.target.value)}
+        />
+      </form>
+
       <button className="logout-btn desktop-only" onClick={handleLogout}>Log out</button>
 
       {/* Hamburger */}
@@ -41,6 +59,15 @@ function Navbar() {
 
       {/* Mobile dropdown */}
       <div className={`mobile-menu ${menuOpen ? 'mobile-menu--open' : ''}`}>
+        <form className="search-form mobile-search" onSubmit={handleSearch}>
+          <input
+            className="search-input"
+            type="text"
+            placeholder="Search..."
+            value={query}
+            onChange={e => setQuery(e.target.value)}
+          />
+        </form>
         <button className="mobile-nav-btn" onClick={() => goTo('/dashboard')}>Dashboard</button>
         <button className="mobile-nav-btn" onClick={() => goTo('/top_artists/medium_term')}>Top Artists</button>
         <button className="mobile-nav-btn" onClick={() => goTo('/my_playlists')}>Playlist</button>

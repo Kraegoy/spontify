@@ -1,0 +1,329 @@
+.sr-root {
+  min-height: 100vh;
+  background: var(--black);
+  padding-top: 57px;
+}
+
+/* ── Hero ── */
+.sr-hero {
+  padding: 48px 40px 32px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.sr-hero-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--green);
+  font-family: 'DM Mono', monospace;
+  margin-bottom: 8px;
+}
+
+.sr-hero-query {
+  font-size: clamp(28px, 4vw, 52px);
+  font-weight: 900;
+  color: var(--text);
+  letter-spacing: -1.5px;
+  line-height: 1;
+  margin: 0;
+}
+
+/* ── Content ── */
+.sr-content {
+  padding: 32px 40px 80px;
+  display: flex;
+  flex-direction: column;
+  gap: 48px;
+}
+
+/* ── Section ── */
+.sr-section {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.sr-section-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.sr-section-title {
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--text);
+  letter-spacing: -0.3px;
+}
+
+.sr-section-count {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.3);
+  font-family: 'DM Mono', monospace;
+  margin-left: auto;
+}
+
+/* ── Track List ── */
+.sr-track-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.sr-track-row {
+  display: grid;
+  grid-template-columns: 24px 40px 1fr auto;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  text-decoration: none;
+  color: inherit;
+  transition: background 0.15s ease;
+}
+
+.sr-track-row:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.sr-track-num {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.25);
+  font-family: 'DM Mono', monospace;
+  text-align: right;
+}
+
+/* Track image wrap */
+.sr-track-img-wrap {
+  width: 40px;
+  height: 40px;
+  border-radius: 5px;
+  background: rgba(255, 255, 255, 0.05);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.sr-track-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 5px;
+  display: block;
+}
+
+.sr-track-info {
+  min-width: 0;
+}
+
+.sr-track-name {
+  font-size: 14px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.9);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-bottom: 3px;
+}
+
+.sr-track-artist {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.35);
+  font-family: 'DM Mono', monospace;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sr-track-duration {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.25);
+  font-family: 'DM Mono', monospace;
+  flex-shrink: 0;
+}
+
+/* ── Cards Grid ── */
+.sr-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 12px;
+}
+
+/* ── Artist Card ── */
+.sr-artist-card {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 12px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+  padding-bottom: 12px;
+  display: flex;
+  flex-direction: column;
+}
+
+.sr-artist-card:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(29, 185, 84, 0.35);
+  transform: translateY(-2px);
+}
+
+.sr-artist-img-wrap {
+  width: 100%;
+  aspect-ratio: 1;
+  background: rgba(255, 255, 255, 0.04);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.sr-artist-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.sr-artist-name {
+  font-size: 13px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.9);
+  padding: 10px 12px 3px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sr-artist-followers {
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.3);
+  font-family: 'DM Mono', monospace;
+  padding: 0 12px;
+}
+
+/* ── Album / Playlist Card ── */
+.sr-album-card {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 12px;
+  overflow: hidden;
+  text-decoration: none;
+  color: inherit;
+  transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+  display: flex;
+  flex-direction: column;
+}
+
+.sr-album-card:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(29, 185, 84, 0.35);
+  transform: translateY(-2px);
+}
+
+.sr-album-img-wrap {
+  width: 100%;
+  aspect-ratio: 1;
+  background: rgba(255, 255, 255, 0.04);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.sr-album-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.sr-album-info {
+  padding: 10px 12px 12px;
+}
+
+.sr-album-name {
+  font-size: 13px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.9);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-bottom: 4px;
+}
+
+.sr-album-meta {
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.3);
+  font-family: 'DM Mono', monospace;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.sr-album-type {
+  color: var(--green);
+  text-transform: capitalize;
+}
+
+.sr-dot {
+  color: rgba(255, 255, 255, 0.2);
+}
+
+/* ── Default image fallback ── */
+.sr-img--default {
+  width: 36px !important;
+  height: 36px !important;
+  object-fit: contain !important;
+  opacity: 0.2;
+}
+
+/* ── Mobile ── */
+@media (max-width: 640px) {
+  .sr-hero {
+    padding: 32px 16px 24px;
+  }
+
+  .sr-content {
+    padding: 24px 16px 60px;
+    gap: 36px;
+  }
+
+  .sr-track-row {
+    grid-template-columns: 40px 1fr auto;
+  }
+
+  .sr-track-num {
+    display: none;
+  }
+
+  .sr-grid {
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 8px;
+  }
+}
+
+/* ── Two col: Tracks + Albums ── */
+.sr-two-col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 40px;
+  align-items: start;
+}
+
+.sr-grid--2col {
+  grid-template-columns: repeat(4, 1fr);
+}
+
+@media (max-width: 900px) {
+  .sr-two-col {
+    grid-template-columns: 1fr;
+  }
+
+  .sr-grid--2col {
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  }
+}

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { getArtist, getArtistAlbums, getArtistLASTFM, getArtistTopTracksLASTFM, getSimilarArtists, getTrackSpotifyUrl } from '../../api'
-import { useParams } from "react-router-dom"
+import { useParams, useNavigate } from "react-router-dom"
 import './ArtistProfile.css'
 import Navbar from '../../components/Navbar/Navbar'
 import '../../index.css'
@@ -291,6 +291,8 @@ function ArtistInfo({ artistInfo, artistImg }) {
 function SimilarArtistChip({ artist, image }) {
   const [spotifyUrl, setSpotifyUrl] = useState(null)
   const [loaded, setLoaded] = useState(false)
+  const navigate = useNavigate()
+
 
   useEffect(() => {
     if (!artist.name) return
@@ -302,7 +304,11 @@ function SimilarArtistChip({ artist, image }) {
       })
       .then(res => {
         const url = res?.data?.spotify_url
-        if (url) setSpotifyUrl(url)
+        if (url) {
+          // extract ID from https://open.spotify.com/artist/7gW0r5CkdEUMm42w9XpyZO
+          const artistId = url.split('/artist/')[1]?.split('?')[0]
+          if (artistId) setSpotifyUrl(`/artist/${artistId}`)
+        }
       })
       .catch(err => console.log("error fetching similar artist spotify url", artist.name, err))
       .finally(() => setLoaded(true))
@@ -311,15 +317,13 @@ function SimilarArtistChip({ artist, image }) {
   if (!loaded || !spotifyUrl) return null
 
   return (
-    <a href={spotifyUrl} target="_blank" rel="noreferrer" style={{ textDecoration: "none" }}>
-      <div className="ai-similar-chip">
-        {image
-          ? <img className="ai-similar-img" src={image} alt={artist.name} />
-          : <div className="ai-similar-placeholder">🎵</div>
-        }
-        {artist.name}
-      </div>
-    </a>
+    <div onClick={() => navigate(spotifyUrl)} className="ai-similar-chip">
+      {image
+        ? <img className="ai-similar-img" src={image} alt={artist.name} />
+        : <div className="ai-similar-placeholder">🎵</div>
+      }
+      {artist.name}
+    </div>
   )
 }
 
@@ -331,6 +335,7 @@ function ArtistProfile() {
   const [artistInfo, setArtistInfo] = useState(null)
   const [artistTopTracks, setArtistTopTracks] = useState(null)
   const [token, setToken] = useState(localStorage.getItem('access_token'))
+
 
   useEffect(() => {
     setLoading(true)

@@ -33,23 +33,7 @@ function ArtistCard({ artist, rank }) {
         <div className="artist-card__genre">
           {artist.genres?.[0] || 'Artist'}
         </div>
-        <div className="artist-card__meta">
-          <div className="artist-card__meta-item">
-            <span className="artist-card__meta-label">Followers</span>
-            <span className="artist-card__meta-value">
-              {artist.followers?.total?.toLocaleString() ?? '—'}
-            </span>
-          </div>
-          <div className="artist-card__meta-item">
-            <span className="artist-card__meta-label">Popularity</span>
-            <div className="artist-card__pop-bar">
-              <div
-                className="artist-card__pop-fill"
-                style={{ width: `${artist.popularity}%` }}
-              />
-            </div>
-          </div>
-        </div>
+        
       </div>
     </div>
   )

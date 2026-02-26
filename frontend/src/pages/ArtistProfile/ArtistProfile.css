@@ -12,7 +12,7 @@
   background-image: var(--artist-bg);
   background-size: cover;
   background-position: center;
-  filter: blur(20px) brightness(0.35);
+  filter: blur(12px) brightness(0.35);
   transform: scale(1.05);
   z-index: 0;
   pointer-events: none;

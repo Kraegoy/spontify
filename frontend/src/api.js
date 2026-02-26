@@ -103,5 +103,13 @@ export const getArtistAlbums = (artistID) => {
   });
 };
 
+export const searchItem = (q) => {
+  return api.get('/search_item/', {
+    params: {
+      q: q
+    }
+  });
+};
+
 export default api
 
