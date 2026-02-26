@@ -16,7 +16,8 @@ urlpatterns = [
     path('get_artist_info_via_last_fm/', views.get_artist_info_via_last_fm, name="get_artist_info_via_last_fm"),
     path('get_artist_top_tracks_via_last_fm/', views.get_artist_top_tracks_via_last_fm, name="get_artist_top_tracks_via_last_fm"),
     path('get_similar_artist_links/', views.get_similar_artist_links, name="get_similar_artist_links"),
-
-
+    path('get_track_spotify_url/', views.get_track_spotify_url, name="get_track_spotify_url"),
+    path('get_recently_played_tracks/', views.get_recently_played_tracks, name="get_recently_played_tracks"),
+    path('call_next_api_url/', views.call_next_api_url, name="call_next_api_url"),
 
 ]

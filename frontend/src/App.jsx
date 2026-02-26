@@ -4,6 +4,7 @@ import Dashboard from './pages/Dashboard/Dashboard'
 import TopArtists from './pages/TopArtists/TopArtists'
 import ArtistProfile from './pages/ArtistProfile/ArtistProfile'
 import MyPlaylists from './pages/MyPlaylists/MyPlaylists'
+import Loading from './components/Loading/Loading'
 
 
 import { useState, useEffect } from 'react'
@@ -21,6 +22,12 @@ if (access) {
 
 function PrivateRoute({ children }) {
   const [valid, setValid] = useState(null)
+  const [minDelay, setMinDelay] = useState(false)
+
+  useEffect(() => {
+    const timer = setTimeout(() => setMinDelay(true), 1500)
+    return () => clearTimeout(timer)
+  }, [])
 
   useEffect(() => {
     getMe()
@@ -32,7 +39,8 @@ function PrivateRoute({ children }) {
       })
   }, [])
 
-  if (valid === null) return <div>Loading...</div>
+  if (valid === null || !minDelay) return <Loading message="" />
+
   return valid ? children : <Navigate to="/" />
 }
 

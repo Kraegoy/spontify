@@ -15,6 +15,7 @@
   filter: blur(20px) brightness(0.35);
   transform: scale(1.05);
   z-index: 0;
+  pointer-events: none;
 }
 
 .artist-profile__hero {
@@ -118,7 +119,6 @@
   box-shadow: 0 6px 28px rgba(29, 185, 84, 0.6);
 }
 
-
 /* ── Albums Section ── */
 .albums-section {
   position: relative;
@@ -147,14 +147,29 @@
   font-family: 'DM Mono', monospace;
 }
 
+/* ── Horizontal scroll ── */
 .albums-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  display: flex;
   gap: 16px;
+  overflow-x: auto;
+  padding-bottom: 12px;
+  scroll-snap-type: x mandatory;
+}
+
+.albums-grid::-webkit-scrollbar {
+  height: 6px;
+}
+
+.albums-grid::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
 }
 
 /* ── Album Card ── */
 .album-card {
+  flex-shrink: 0;
+  width: 180px;
+  scroll-snap-align: start;
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 12px;
@@ -237,18 +252,12 @@
   color: rgba(255, 255, 255, 0.2);
 }
 
-
 /* ── Artist Info Section ── */
-
-
-
-
 .ai-root {
   position: relative;
   z-index: 1;
   padding: 10px 48px 80px;
   background-color: rgba(18, 18, 18, 0.65);
-
 }
 
 .ai-header {
@@ -481,6 +490,7 @@
 .ai-similar-chip:hover {
   background: rgba(255, 255, 255, 0.08);
   border-color: rgba(29, 185, 84, 0.4);
+  cursor: pointer;
 }
 
 .ai-similar-img {
@@ -528,4 +538,219 @@
   color: white;
   border-color: rgba(255, 255, 255, 0.25);
   background: rgba(255, 255, 255, 0.08);
+}
+
+/* ── Popular Tracks Section ── */
+.popular-tracks-section {
+  position: relative;
+  z-index: 1;
+  padding: 0 48px 48px;
+  background: rgba(18, 18, 18, 0.65);
+}
+
+.popular-tracks-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.popular-tracks-title {
+  font-size: 22px;
+  font-weight: 800;
+  font-family: 'Syne', sans-serif;
+  color: #fff;
+}
+
+.popular-tracks-row {
+  display: flex;
+  gap: 18px;
+  overflow-x: auto;
+  padding-bottom: 8px;
+  scroll-snap-type: x mandatory;
+}
+
+.popular-tracks-row::-webkit-scrollbar {
+  height: 6px;
+}
+
+.popular-tracks-row::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+}
+
+/* ── Popular Track Card ── */
+.popular-track-card-link {
+  text-decoration: none;
+  color: inherit;
+  scroll-snap-align: start;
+}
+
+.popular-track-card {
+  width: 210px;
+  border-radius: 14px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  transition: transform .2s ease, border-color .2s ease, background .2s ease;
+}
+
+.popular-track-card-link:hover .popular-track-card {
+  transform: translateY(-2px);
+  border-color: rgba(29, 185, 84, 0.4);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.popular-track-card--loading {
+  opacity: 0.4;
+  pointer-events: none;
+  animation: shimmer 1.4s infinite;
+}
+
+@keyframes shimmer {
+  0%, 100% { opacity: 0.4; }
+  50%       { opacity: 0.2; }
+}
+
+.popular-track-card__img-wrap {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.popular-track-card__img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.popular-track-card__img-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.popular-track-card__body {
+  padding: 12px 12px 14px;
+}
+
+.popular-track-card__name {
+  font-size: 14px;
+  font-weight: 800;
+  font-family: 'Syne', sans-serif;
+  color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-bottom: 8px;
+}
+
+.popular-track-card__meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  font-family: 'DM Mono', monospace;
+  color: rgba(255, 255, 255, 0.45);
+}
+
+.popular-track-card__rank {
+  color: #1db954;
+  font-weight: 800;
+}
+
+.popular-track-card__dot {
+  color: rgba(255, 255, 255, 0.2);
+}
+
+/* ═══════════════════════════════
+   MOBILE RESPONSIVE ≤ 640px
+═══════════════════════════════ */
+@media (max-width: 640px) {
+
+  /* Hero */
+  .artist-profile__hero {
+    height: auto;
+    padding: 80px 20px 32px;
+    gap: 14px;
+  }
+
+  .artist-profile__img {
+    width: 150px;
+    height: 150px;
+  }
+
+  .artist-profile__name {
+    font-size: clamp(26px, 8vw, 42px);
+  }
+
+  .artist-profile__stats {
+    gap: 20px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .artist-profile__stat-value {
+    font-size: 18px;
+  }
+
+  .artist-profile__spotify-btn {
+    padding: 12px 24px;
+    font-size: 13px;
+  }
+
+  /* Albums */
+  .albums-section {
+    padding: 32px 16px 48px;
+  }
+
+  .album-card {
+    width: 140px;
+  }
+
+  /* Artist Info */
+  .ai-root {
+    padding: 10px 16px 48px;
+  }
+
+  .ai-avatar {
+    width: 22%;
+    min-width: 56px;
+  }
+
+  .ai-name {
+    font-size: clamp(18px, 5vw, 28px);
+  }
+
+  .ai-stats {
+    gap: 20px;
+    flex-wrap: wrap;
+  }
+
+  .ai-stat-value {
+    font-size: 18px;
+  }
+
+  .ai-bio {
+    padding: 16px;
+  }
+
+  /* Popular Tracks */
+  .popular-tracks-section {
+    padding: 0 16px 48px;
+  }
+
+  .popular-track-card {
+    width: 155px;
+  }
+
+  .popular-tracks-title,
+  .albums-title {
+    font-size: 18px;
+  }
 }

@@ -64,8 +64,19 @@ export const getSimilarArtists = (artistMBID) => {
 };
 
 
+export const getTrackSpotifyUrl = (artistName, trackName) => {
+  return api.get('/get_track_spotify_url/', {
+    params: {
+      artist: artistName,
+      track: trackName
+    }
+  });
+};
+
 export const getMe = () => api.get('/auth/spotify/me/')
 export const getMyPlaylists = () => api.get('/get_my_playlists/')
+export const getRecentlyPlayedTracks = () => api.get('/get_recently_played_tracks/')
+
 export const logoutUser = () => {
     localStorage.removeItem('access_token')
     localStorage.removeItem('refresh_token')
@@ -74,6 +85,13 @@ export const logoutUser = () => {
 export const playTrack = (trackUri) => {
   return api.post('/play_track/', {
     track_uri: trackUri
+  });
+};
+
+
+export const callNextApiUrl = (nextUrl) => {
+  return api.get('/call_next_api_url/', {
+    params: { next_url: nextUrl } 
   });
 };
 

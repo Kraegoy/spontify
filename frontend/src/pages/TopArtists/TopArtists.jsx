@@ -64,6 +64,7 @@ function TopArtists() {
   const [artists, setArtists] = useState([])
   const [loading, setLoading] = useState(true)
 
+
   useEffect(() => {
     setLoading(true)
     Promise.all([getTopArtists(range)])
@@ -72,58 +73,60 @@ function TopArtists() {
       .finally(() => setLoading(false))
   }, [range])
 
-  console.log(artists)
   return (
-    <div className="ta-bg">
+    <>      
       <Navbar />
+      <div className="ta-bg">
 
-     
-      <div className="ta-section">
-        <div className="ta-header">
-          <span className="ta-title">Your Top Artists</span>
+      
+        <div className="ta-section">
+          <div className="ta-header">
+            <span className="ta-title">Your Top Artists</span>
 
-           {/* optional tabs */}
-          <div className="ta-tabs">
-            <button
-              className={range === "short_term" ? "active" : ""}
-              onClick={() => navigate("/top_artists/short_term")}
-            >
-              4 weeks
-            </button>
-            <button
-              className={range === "medium_term" ? "active" : ""}
-              onClick={() => navigate("/top_artists/medium_term")}
-            >
-              6 months
-            </button>
-            <button
-              className={range === "long_term" ? "active" : ""}
-              onClick={() => navigate("/top_artists/long_term")}
-            >
-              all time
-            </button>
+            {/* optional tabs */}
+            <div className="ta-tabs">
+              <button
+                className={range === "short_term" ? "active" : ""}
+                onClick={() => navigate("/top_artists/short_term")}
+              >
+                4 weeks
+              </button>
+              <button
+                className={range === "medium_term" ? "active" : ""}
+                onClick={() => navigate("/top_artists/medium_term")}
+              >
+                6 months
+              </button>
+              <button
+                className={range === "long_term" ? "active" : ""}
+                onClick={() => navigate("/top_artists/long_term")}
+              >
+                all time
+              </button>
+            </div>
+            <span className="ta-count">{artists.length} artists</span>
+
           </div>
-          <span className="ta-count">{artists.length} artists</span>
 
+
+
+          {loading ? (
+            <div className="ta-grid">
+              {[...Array(6)].map((_, i) => (
+                <div key={i} className="artist-card artist-card--skeleton" />
+              ))}
+            </div>
+          ) : (
+            <div className="ta-grid">
+              {artists.map((artist, i) => (
+                <ArtistCard key={artist.id} artist={artist} rank={i + 1} />
+              ))}
+            </div>
+          )}
         </div>
-
-
-
-        {loading ? (
-          <div className="ta-grid">
-            {[...Array(6)].map((_, i) => (
-              <div key={i} className="artist-card artist-card--skeleton" />
-            ))}
-          </div>
-        ) : (
-          <div className="ta-grid">
-            {artists.map((artist, i) => (
-              <ArtistCard key={artist.id} artist={artist} rank={i + 1} />
-            ))}
-          </div>
-        )}
       </div>
-    </div>
+    </>
+
   )
 }
 

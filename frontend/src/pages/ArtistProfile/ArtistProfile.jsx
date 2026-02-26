@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react'
-import { getArtist, getArtistAlbums, getArtistLASTFM, getArtistTopTracksLASTFM, getSimilarArtists} from '../../api'
+import { getArtist, getArtistAlbums, getArtistLASTFM, getArtistTopTracksLASTFM, getSimilarArtists, getTrackSpotifyUrl } from '../../api'
 import { useParams } from "react-router-dom"
 import './ArtistProfile.css'
 import Navbar from '../../components/Navbar/Navbar'
 import '../../index.css'
+import Loading from '../../components/Loading/Loading'
+
 
 
 function ArtistAlbums({ album }) {
@@ -37,7 +39,65 @@ function ArtistAlbums({ album }) {
   )
 }
 
-function ArtistInfo({ artistInfo }) {
+function TopTrackCard({ track, delay = 0, token }) {
+  const [spotifyUrl, setSpotifyUrl] = useState(null)
+  const [loaded, setLoaded] = useState(false)
+  const [spotifyImg, setSpotifyImg] = useState(null)
+
+  useEffect(() => {
+    if (!track.name || !track.artist?.name || !token) return
+
+    const timer = setTimeout(() => {
+      getTrackSpotifyUrl(track.artist.name, track.name)
+        .then(res => {
+          const url = res.data?.spotify_url
+          const img = res.data?.image
+          setSpotifyUrl(url || null)
+          setSpotifyImg(img || null)
+        })
+        .catch(err => console.log("error fetching track spotify url", track.name, err))
+        .finally(() => setLoaded(true))
+    }, delay)
+
+    return () => clearTimeout(timer)
+  }, [track.name, track.artist?.name, delay, token])
+
+  if (loaded && !spotifyUrl) return null
+
+  const card = (
+    <div className={`popular-track-card ${!loaded ? "popular-track-card--loading" : ""}`}>
+      <div className="popular-track-card__img-wrap">
+        {spotifyImg ? (
+          <img className="popular-track-card__img" src={spotifyImg} alt={track.name} />
+        ) : (
+          <div className="popular-track-card__img-placeholder">🎵</div>
+        )}
+      </div>
+
+      <div className="popular-track-card__body">
+        <div className="popular-track-card__name" title={track.name}>
+          {track.name}
+        </div>
+
+        <div className="popular-track-card__meta">
+          <span className="popular-track-card__rank">#{track["@attr"]?.rank}</span>
+          <span className="popular-track-card__dot">·</span>
+          <span>{track.name}</span>
+        </div>
+      </div>
+    </div>
+  )
+
+  return loaded && spotifyUrl ? (
+    <a href={spotifyUrl} target="_blank" rel="noreferrer" className="popular-track-card-link">
+      {card}
+    </a>
+  ) : (
+    card
+  )
+}
+
+function ArtistInfo({ artistInfo, artistImg }) {
   const [bioExpanded, setBioExpanded] = useState(false)
   const [wikiImage, setWikiImage] = useState(null)
   const [similarWikiImages, setSimilarWikiImages] = useState({})
@@ -47,24 +107,47 @@ function ArtistInfo({ artistInfo }) {
   useEffect(() => {
     if (!data?.name) return
     async function fetchWikiImage() {
-      try {
-        const res = await fetch(
-          `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(data.name)}`
-        )
-        const json = await res.json()
-        setWikiImage(json.thumbnail?.source || json.originalimage?.source || null)
-      } catch (e) {
-        console.log('wiki image error', e)
+     try {
+      const res = await fetch(
+        `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(data.name)}`
+      )
+
+      const json = await res.json()
+      console.log("wikipedia", json)
+
+      const extract = json.extract?.toLowerCase() || ""
+
+      const isMusicRelated =
+        extract.includes("artist") ||
+        extract.includes("singer") ||
+        extract.includes("musician") ||
+        extract.includes("band") ||
+        extract.includes("song") ||
+        extract.includes("songwriter") ||
+        extract.includes("rapper") ||
+        extract.includes("music")
+
+      if (isMusicRelated && json.thumbnail?.source) {
+        setWikiImage(json.thumbnail.source)
+      } else {
+        setWikiImage(artistImg || null)
       }
+
+    } catch (e) {
+      console.log("wiki image error", e)
+      setWikiImage(artistImg || null)
+    }
     }
     fetchWikiImage()
   }, [data?.name])
 
   useEffect(() => {
     if (!data?.name) return
-    async function fetchSimilarImages() {
+
+    async function fetchSimilarArtistImages() {
       const similarArtists = data.similar?.artist || []
       const results = {}
+
       await Promise.all(
         similarArtists.map(async (a) => {
           try {
@@ -72,15 +155,37 @@ function ArtistInfo({ artistInfo }) {
               `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(a.name)}`
             )
             const json = await res.json()
-            results[a.name] = json.thumbnail?.source || json.originalimage?.source || null
-          } catch {
+            if (json.thumbnail?.source) {
+              results[a.name] = json.thumbnail.source
+              return
+            }
+          } catch { /* fall through */ }
+
+          try {
+            const lfm = await getArtistLASTFM(a.name)
+            const mbid = lfm.data?.artist?.mbid
+            if (!mbid) return
+
+            const mbRes = await getSimilarArtists(mbid)
+            const spotifyUrl = mbRes.data?.spotify_url
+            if (!spotifyUrl) return
+
+            const spotifyID = spotifyUrl.split('/').pop()?.split('?')[0]
+            if (!spotifyID) return
+
+            const spotifyRes = await getArtist(spotifyID)
+            results[a.name] = spotifyRes.data?.images?.[0]?.url || null
+          } catch (err) {
+            console.log('error fetching similar artist image', a.name, err)
             results[a.name] = null
           }
         })
       )
+
       setSimilarWikiImages(results)
     }
-    fetchSimilarImages()
+
+    fetchSimilarArtistImages()
   }, [data?.name])
 
   if (!data) return null
@@ -156,20 +261,19 @@ function ArtistInfo({ artistInfo }) {
       )}
 
       {similarArtists.length > 0 && (
-      <>
-        <div className="ai-section-label">Similar Artists</div>
-        <div className="ai-similar">
-          {similarArtists.map(a => (
-            <SimilarArtistChip
-              key={a.name}
-              artist={a}
-              image={similarWikiImages[a.name] || a.image || null}
-              
-            />
-          ))}
-        </div>
-      </>
-    )}
+        <>
+          <div className="ai-section-label">Similar Artists</div>
+          <div className="ai-similar">
+            {similarArtists.map(a => (
+              <SimilarArtistChip
+                key={a.name}
+                artist={a}
+                image={similarWikiImages[a.name] || a.image || null}
+              />
+            ))}
+          </div>
+        </>
+      )}
 
       {lastFMUrl && (
         <>
@@ -186,6 +290,7 @@ function ArtistInfo({ artistInfo }) {
 
 function SimilarArtistChip({ artist, image }) {
   const [spotifyUrl, setSpotifyUrl] = useState(null)
+  const [loaded, setLoaded] = useState(false)
 
   useEffect(() => {
     if (!artist.name) return
@@ -196,12 +301,14 @@ function SimilarArtistChip({ artist, image }) {
         return getSimilarArtists(mbid)
       })
       .then(res => {
-        if (res?.data?.spotify_url) setSpotifyUrl(res.data.spotify_url)
+        const url = res?.data?.spotify_url
+        if (url) setSpotifyUrl(url)
       })
-      .catch(err => console.log("error fetching similar artist", err))
+      .catch(err => console.log("error fetching similar artist spotify url", artist.name, err))
+      .finally(() => setLoaded(true))
   }, [artist.name])
 
-  if (!spotifyUrl) return null
+  if (!loaded || !spotifyUrl) return null
 
   return (
     <a href={spotifyUrl} target="_blank" rel="noreferrer" style={{ textDecoration: "none" }}>
@@ -215,6 +322,7 @@ function SimilarArtistChip({ artist, image }) {
     </a>
   )
 }
+
 function ArtistProfile() {
   const { artistID } = useParams()
   const [artist, setArtist] = useState(null)
@@ -222,80 +330,102 @@ function ArtistProfile() {
   const [albums, setAlbums] = useState([])
   const [artistInfo, setArtistInfo] = useState(null)
   const [artistTopTracks, setArtistTopTracks] = useState(null)
+  const [token, setToken] = useState(localStorage.getItem('access_token'))
 
+  useEffect(() => {
+    setLoading(true)
+    Promise.all([getArtist(artistID), getArtistAlbums(artistID)])
+      .then(([ArtRes, AlbRes]) => {
+        const artistData = ArtRes.data
+        setArtist(artistData)
+        setAlbums(AlbRes.data.items || [])
+        return Promise.all([getArtistLASTFM(artistData.name), getArtistTopTracksLASTFM(artistData.name)])
+      })
+      .then(([ArtistlastFmRes, ArtistTopTrackslastFmRes]) => {
+        setArtistInfo(ArtistlastFmRes.data)
+        setArtistTopTracks(ArtistTopTrackslastFmRes.data)
+      })
+      .catch(err => console.log('error', err))
+      .finally(() => setLoading(false))
+  }, [artistID])
 
- useEffect(() => {
-  setLoading(true)
-  Promise.all([getArtist(artistID), getArtistAlbums(artistID)])
-    .then(([ArtRes, AlbRes]) => {
-      const artistData = ArtRes.data
-      setArtist(artistData)
-      setAlbums(AlbRes.data.items || [])
-      return Promise.all([getArtistLASTFM(artistData.name), getArtistTopTracksLASTFM(artistData.name)])
-    })
-    .then(([ArtistlastFmRes, ArtistTopTrackslastFmRes]) => {
-      setArtistInfo(ArtistlastFmRes.data)
-      setArtistTopTracks(ArtistTopTrackslastFmRes.data)
-    })
-    .catch(err => console.log('error', err))
-    .finally(() => setLoading(false))
-}, [artistID])
-
-  if (loading) return <div>Loading...</div>
+  if (loading) return <Loading />
   if (!artist) return <div>Artist not found</div>
 
-  console.log("artist info", artistInfo)
-  console.log("artist top tracks", artistTopTracks)
+  const topTracks = artistTopTracks?.toptracks?.track || []
 
   return (
-    <div className="artist-profile">
+    <>      
       <Navbar />
-      <div
-        className="artist-profile__bg"
-        style={{ '--artist-bg': `url(${artist.images?.[0]?.url})` }}
-      />
-      <div className="artist-profile__hero">
-        <img
-          className="artist-profile__img"
-          src={artist.images?.[0]?.url}
-          alt={artist.name}
+      <div className="artist-profile">
+        <div
+          className="artist-profile__bg"
+          style={{ '--artist-bg': `url(${artist.images?.[0]?.url})` }}
         />
-        <div className="artist-profile__overlay">
-          <div className="artist-profile__type">Artist</div>
-          <div className="artist-profile__name">{artist.name}</div>
-          <div className="artist-profile__genres">
-            {artist.genres?.map(genre => (
-              <span key={genre} className="artist-profile__genre">{genre}</span>
-            ))}
-          </div>
-          <a
-            className="artist-profile__spotify-btn"
-            href={artist.external_urls?.spotify}
-            target="_blank"
-            rel="noreferrer"
-          >
-            Open in Spotify
-          </a>
-        </div>
-      </div>
-      {albums.length > 0 && (
-        <div className="albums-section">
-          <div className="albums-header">
-            <span className="albums-title">Discography</span>
-            <span className="albums-count">{albums.length} releases</span>
-          </div>
-          <div className="albums-grid">
-            {albums.map((album) => (
-              <ArtistAlbums key={album.id} album={album} />
-            ))}
+        <div className="artist-profile__hero">
+          <img
+            className="artist-profile__img"
+            src={artist.images?.[0]?.url}
+            alt={artist.name}
+          />
+          <div className="artist-profile__overlay">
+            <div className="artist-profile__type">Artist</div>
+            <div className="artist-profile__name">{artist.name}</div>
+            <div className="artist-profile__genres">
+              {artist.genres?.map(genre => (
+                <span key={genre} className="artist-profile__genre">{genre}</span>
+              ))}
+            </div>
+            <a
+              className="artist-profile__spotify-btn"
+              href={artist.external_urls?.spotify}
+              target="_blank"
+              rel="noreferrer"
+            >
+              Open in Spotify
+            </a>
           </div>
         </div>
-      )}
 
-      <div className="artist-info-container">
-      <ArtistInfo artistInfo={artistInfo} />
+        {albums.length > 0 && (
+          <div className="albums-section">
+            <div className="albums-header">
+              <span className="albums-title">Discography</span>
+              <span className="albums-count">{albums.length} releases</span>
+            </div>
+            <div className="albums-grid">
+              {albums.map((album) => (
+                <ArtistAlbums key={album.id} album={album} />
+              ))}
+            </div>
+          </div>
+        )}
+
+        {topTracks.length > 0 && (
+          <div className="popular-tracks-section">
+            <div className="popular-tracks-header">
+              <h2 className="popular-tracks-title">Popular Tracks</h2>
+            </div>
+
+            <div className="popular-tracks-row">
+              {topTracks.map((t, i) => (
+                <TopTrackCard
+                  key={`${t.name}-${t.artist?.name}-${i}`}
+                  track={t}
+                  delay={i * 240}
+                  token={token}
+                />
+              ))}
+            </div>
+          </div>
+        )}
+
+        <div className="artist-info-container">
+          <ArtistInfo artistInfo={artistInfo} artistImg={artist.images?.[0]?.url} />
+        </div>
       </div>
-    </div>
+    </>
+
   )
 }
 

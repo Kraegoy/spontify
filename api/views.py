@@ -1,6 +1,7 @@
 import requests
 from datetime import timedelta
 from urllib.parse import urlencode
+import hashlib
 
 from django.conf import settings
 from django.contrib.auth.models import User
@@ -82,8 +83,7 @@ def spotify_callback(request):
         headers={'Content-Type': 'application/x-www-form-urlencoded'}
     )
 
-    print("TOKEN STATUS:", token_response.status_code)
-    print("TOKEN BODY:", token_response.text)
+
 
     if not token_response.ok:
         return redirect(f"{settings.FRONTEND_URL}?error=token_request_failed")
@@ -102,8 +102,6 @@ def spotify_callback(request):
         headers={'Authorization': f'Bearer {access_token}'}
     )
 
-    print("PROFILE STATUS:", profile_response.status_code)
-    print("PROFILE BODY:", profile_response.text)
 
     if profile_response.status_code == 429:
         return redirect(f"{settings.FRONTEND_URL}?error=rate_limited")
@@ -281,9 +279,6 @@ def play_track(request, access_token):
         json={"uris": [track_uri]}
     )
 
-    print("SPOTIFY STATUS:", response.status_code)
-    print("SPOTIFY TEXT:", response.text)
-
     if response.status_code == 204:
         return Response({"ok": True}, status=200)
 
@@ -322,7 +317,6 @@ def get_artist(request, access_token):
         return Response({'error': 'Failed to fetch top artists', 'status': response.status_code}, status=response.status_code)
 
     data = response.json()
-    print("SPOTIFY DATA:", data)
     cache.set(cache_key, data, timeout=60*60*24)
 
     return Response(data)
@@ -348,7 +342,6 @@ def get_my_playlists(request, access_token):
         return Response({'error': 'Failed to fetch playlists', 'status': response.status_code}, status=response.status_code)
 
     data = response.json()
-    print("SPOTIFY DATA:", data)
     cache.set(cache_key, data, timeout=60*60*24)
 
     return Response(data)
@@ -407,7 +400,6 @@ def get_artist_info_via_last_fm(request, access_token):
     return Response(data)
 
 
-
 @api_view(["GET"])
 @spotify_auth_required
 def get_artist_top_tracks_via_last_fm(request, access_token):
@@ -419,9 +411,10 @@ def get_artist_top_tracks_via_last_fm(request, access_token):
     if cached:
         print(f"cached {cache_key}")
         return Response(cached)
+
     response = requests.get(
-        f"https://ws.audioscrobbler.com/2.0/",
-        params = {
+        "https://ws.audioscrobbler.com/2.0/",
+        params={
             "method": "artist.getTopTracks",
             "artist": artist_name,
             "api_key": settings.LAST_FM_API_KEY,
@@ -429,9 +422,13 @@ def get_artist_top_tracks_via_last_fm(request, access_token):
         }
     )
     
+    if not response.ok:
+        return Response({'error': 'Failed to get artist top tracks via last fm', 'status': response.status_code}, status=response.status_code)
+    
     data = response.json()
     cache.set(cache_key, data, timeout=60*60*24*3)
     return Response(data)
+
 
 @api_view(["GET"])
 @spotify_auth_required
@@ -471,3 +468,111 @@ def get_similar_artist_links(request, access_token):
     
     except requests.exceptions.RequestException as e:
         return Response({"error": str(e)}, status=500)
+    
+
+@api_view(["GET"])
+@spotify_auth_required
+def get_track_spotify_url(request, access_token):
+    artist_name = request.query_params.get('artist')
+    track_name = request.query_params.get('track')
+
+    if not artist_name or not track_name:
+        return Response({"error": "artist and track are required"}, status=400)
+
+    raw_key = f"track-spotify-{artist_name}-{track_name}"
+    cache_key = "track-spotify-" + hashlib.md5(raw_key.encode()).hexdigest()    
+    cached = cache.get(cache_key)
+    if cached:
+        return Response(cached)
+
+    try:
+        response = requests.get(
+            "https://api.spotify.com/v1/search",
+            headers={"Authorization": f"Bearer {access_token}"},
+            params={
+                "q": f"track:{track_name} artist:{artist_name}",
+                "type": "track",
+                "limit": 1
+            }
+        )
+
+        if not response.ok:
+            return Response({"error": "Failed to search Spotify"}, status=response.status_code)
+
+        data = response.json()
+        tracks = data.get("tracks", {}).get("items", [])
+
+        if not tracks:
+            result = {"spotify_url": None, "image": None, "reason": "not found on Spotify"}
+            cache.set(cache_key, result, timeout=60*60*24)
+            return Response(result)
+
+        track = tracks[0]
+
+        spotify_url = track.get("external_urls", {}).get("spotify")
+
+        images = (track.get("album") or {}).get("images") or []
+        image_url = images[0]["url"] if images else None  
+
+        result = {"spotify_url": spotify_url, "image": image_url}
+
+        cache.set(cache_key, result, timeout=60*60*24*120)
+        return Response(result)
+
+    except requests.exceptions.RequestException as e:
+        return Response({"error": str(e)}, status=500)
+    
+    
+    
+@api_view(["GET"])
+@spotify_auth_required
+def get_recently_played_tracks(request, access_token):
+    
+    user = request.user.id
+    cache_key = f"{user}-recently-played-tracks"
+    cached = cache.get(cache_key)
+    if cached:
+        print(f"cached - {cache_key}")
+        return Response(cached)
+    
+    response = requests.get(
+        "https://api.spotify.com/v1/me/player/recently-played",
+        headers={'Authorization': f'Bearer {access_token}'}
+    )
+    
+    if not response.ok:
+        return Response({'error': 'Failed to fetch recently played tracks', 'status': response.status_code}, status=response.status_code)
+    
+    data = response.json()
+    cache.set(cache_key, data, timeout=60*10)
+    
+    return Response(data)
+
+
+@api_view(["GET"])
+@spotify_auth_required
+def call_next_api_url(request, access_token):
+    next_url = request.query_params.get("next_url")
+    user = request.user.id
+
+    if not next_url:
+        return Response("error getting next url")
+
+    cache_key = f"{user}-{next_url}"
+    cached = cache.get(cache_key)
+    if cached:
+        print(f"cached {cache_key}") 
+        return Response(cached)
+
+    response = requests.get(
+        next_url,
+        headers={'Authorization': f'Bearer {access_token}'}
+    )
+
+    if not response.ok:
+        return Response({'error': 'Failed to fetch next url', 'status': response.status_code}, status=response.status_code)
+
+    data = response.json()
+    cache.set(cache_key, data, 60 * 10) 
+    return Response(data)  
+

@@ -1,8 +1,10 @@
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import './Navbar.css'
 
 function Navbar() {
   const navigate = useNavigate()
+  const [menuOpen, setMenuOpen] = useState(false)
 
   const handleLogout = () => {
     localStorage.removeItem('access_token')
@@ -10,29 +12,40 @@ function Navbar() {
     window.location.href = '/'
   }
 
-  const goToTopArtists = (timeRange) => {
-  navigate(`/top_artists/${timeRange}`)
-}
-
-  const goToMyPlaylists = () => {
-  navigate(`/my_playlists`)
-}
+  const goTo = (path) => {
+    navigate(path)
+    setMenuOpen(false)
+  }
 
   return (
     <nav className="navbar">
-
-      <div className="navbar-logo" onClick={() => navigate('/dashboard')} style={{ cursor: 'pointer' }}>
+      <div className="navbar-logo" onClick={() => goTo('/dashboard')}>
         <img className="logo-icon" src="/spontify logo.png" alt="Spontify" />
         <div className="logo-text">sponti<span>fy</span></div>
       </div>
 
       <div className="navbar-links">
-        <button className="nav-btn" onClick={() => navigate('/dashboard')}>Dashboard</button>
-        <button className="nav-btn" onClick={() => goToTopArtists('medium_term')}>Top Artists</button>
-        <button className="nav-btn" onClick={() => goToMyPlaylists()}>Playlist</button>
-
+        <button className="nav-btn" onClick={() => goTo('/dashboard')}>Dashboard</button>
+        <button className="nav-btn" onClick={() => goTo('/top_artists/medium_term')}>Top Artists</button>
+        <button className="nav-btn" onClick={() => goTo('/my_playlists')}>Playlist</button>
       </div>
-      <button className="logout-btn" onClick={handleLogout}>Log out</button>
+
+      <button className="logout-btn desktop-only" onClick={handleLogout}>Log out</button>
+
+      {/* Hamburger */}
+      <button className="hamburger" onClick={() => setMenuOpen(p => !p)} aria-label="Menu">
+        <span className={`bar ${menuOpen ? 'open' : ''}`} />
+        <span className={`bar ${menuOpen ? 'open' : ''}`} />
+        <span className={`bar ${menuOpen ? 'open' : ''}`} />
+      </button>
+
+      {/* Mobile dropdown */}
+      <div className={`mobile-menu ${menuOpen ? 'mobile-menu--open' : ''}`}>
+        <button className="mobile-nav-btn" onClick={() => goTo('/dashboard')}>Dashboard</button>
+        <button className="mobile-nav-btn" onClick={() => goTo('/top_artists/medium_term')}>Top Artists</button>
+        <button className="mobile-nav-btn" onClick={() => goTo('/my_playlists')}>Playlist</button>
+        <button className="mobile-nav-btn logout" onClick={handleLogout}>Log out</button>
+      </div>
     </nav>
   )
 }
