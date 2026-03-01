@@ -3,6 +3,8 @@ import { getMyPlaylists } from '../../api'
 import Navbar from '../../components/Navbar/Navbar'
 import './MyPlaylists.css'
 import '../../index.css'
+import Footer from '../../components/Footer/Footer'
+
 
 
 function PlaylistCard({ playlist }) {
@@ -68,6 +70,7 @@ function MyPlaylists() {
   )
 
   return (
+    <>
     <div className="playlists-bg">
       <Navbar />
       <div className="playlists-section">
@@ -82,6 +85,8 @@ function MyPlaylists() {
         </div>
       </div>
     </div>
+    <Footer/>
+    </>
   )
 }
 

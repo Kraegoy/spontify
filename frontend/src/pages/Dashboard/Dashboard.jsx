@@ -1,16 +1,18 @@
-  import { useEffect, useState } from 'react'
-  import { useNavigate, useParams } from 'react-router-dom'
-  import { getTopTracks, getMe, logoutUser, playTrack, getRecentlyPlayedTracks, callNextApiUrl } from '../../api'
-  import './Dashboard.css'
-  import Navbar from '../../components/Navbar/Navbar'
-  import Loading from '../../components/Loading/Loading'
-  import '../../index.css'
+import { useEffect, useState } from 'react'
+import { useNavigate, useParams } from 'react-router-dom'
+import { getTopTracks, getMe, logoutUser, playTrack, getRecentlyPlayedTracks, callNextApiUrl } from '../../api'
+import './Dashboard.css'
+import Navbar from '../../components/Navbar/Navbar'
+import Loading from '../../components/Loading/Loading'
+import Footer from '../../components/Footer/Footer'
 
-  function msToTime(ms) {
-    const minutes = Math.floor(ms / 60000)
-    const seconds = Math.floor((ms % 60000) / 1000)
-    return `${minutes}:${seconds.toString().padStart(2, '0')}`
-  }
+import '../../index.css'
+
+function msToTime(ms) {
+  const minutes = Math.floor(ms / 60000)
+  const seconds = Math.floor((ms % 60000) / 1000)
+  return `${minutes}:${seconds.toString().padStart(2, '0')}`
+}
 
 function RecentlyPlayedTrackCard({ item }) {
   const track = item?.track
@@ -52,7 +54,7 @@ function Dashboard() {
 
   const [tracks, setTracks] = useState([])
   const [profile, setProfile] = useState(null)
-  const [loading, setLoading] = useState(true)
+  const [tracksLoading, setTracksLoading] = useState(true)
   const [recentlyPlayed, setRecentlyPlayed] = useState([])
   const [nextUrl, setNextUrl] = useState(null)
   const [loadingMore, setLoadingMore] = useState(false)
@@ -71,23 +73,29 @@ function Dashboard() {
     }
   }
 
+  // Runs once on mount — profile + recently played don't depend on range
   useEffect(() => {
-    setLoading(true)
-    Promise.all([getTopTracks(range), getMe(), getRecentlyPlayedTracks()])
-      .then(([tracksRes, meRes, recentlyRes]) => {
-        setTracks(tracksRes.data?.items || [])
+    Promise.all([getMe(), getRecentlyPlayedTracks()])
+      .then(([meRes, recentlyRes]) => {
         setProfile(meRes.data)
         setRecentlyPlayed(recentlyRes.data?.items || [])
         setNextUrl(recentlyRes.data?.next || null)
       })
       .catch(err => console.log("error", err))
-      .finally(() => setLoading(false))
+  }, [])
+
+  // Runs when range changes — only fetches top tracks
+  useEffect(() => {
+    setTracksLoading(true)
+    getTopTracks(range)
+      .then(res => setTracks(res.data?.items || []))
+      .catch(err => console.log("error", err))
+      .finally(() => setTracksLoading(false))
   }, [range])
 
   const profileImg = profile?.images?.[0]?.url
 
   return (
-
     <>
       <Navbar />
 
@@ -126,7 +134,7 @@ function Dashboard() {
           </div>
         </div>
 
-        {loading ? (
+        {!profile ? (
           <div style={{ position: 'relative', zIndex: 2, padding: '0 40px' }}>
             <Loading />
           </div>
@@ -159,35 +167,39 @@ function Dashboard() {
                 </div>
               </div>
 
-              <div className="track-list">
-                {tracks.map((track, i) => (
-                  <div
-                    className="track-item"
-                    key={track.id}
-                    onClick={() => playTrack(track.uri)}
-                  >
-                    <div className="track-num">{i + 1}</div>
-                    <div className="track-play">▶</div>
-                    {track.album?.images?.[0]?.url
-                      ? <img className="track-img" src={track.album.images[0].url} alt={track.album.name} />
-                      : <div className="track-img-placeholder">♪</div>
-                    }
-                    <div className="track-info">
-                      <div className="track-name">{track.name}</div>
-                      <div className="track-artist">{track.artists?.map(a => a.name).join(", ")}</div>
-                    </div>
-                    <a
-                      className="track-duration"
-                      href={track.external_urls?.spotify}
-                      target="_blank"
-                      rel="noreferrer"
-                      onClick={e => e.stopPropagation()}
+              {tracksLoading ? (
+                <Loading />
+              ) : (
+                <div className="track-list">
+                  {tracks.map((track, i) => (
+                    <div
+                      className="track-item"
+                      key={track.id}
+                      onClick={() => playTrack(track.uri)}
                     >
-                      {msToTime(track.duration_ms)}
-                    </a>
-                  </div>
-                ))}
-              </div>
+                      <div className="track-num">{i + 1}</div>
+                      <div className="track-play">▶</div>
+                      {track.album?.images?.[0]?.url
+                        ? <img className="track-img" src={track.album.images[0].url} alt={track.album.name} />
+                        : <div className="track-img-placeholder">♪</div>
+                      }
+                      <div className="track-info">
+                        <div className="track-name">{track.name}</div>
+                        <div className="track-artist">{track.artists?.map(a => a.name).join(", ")}</div>
+                      </div>
+                      <a
+                        className="track-duration"
+                        href={track.external_urls?.spotify}
+                        target="_blank"
+                        rel="noreferrer"
+                        onClick={e => e.stopPropagation()}
+                      >
+                        {msToTime(track.duration_ms)}
+                      </a>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* ── Right: Recently Played ── */}
@@ -214,7 +226,10 @@ function Dashboard() {
           </div>
         )}
       </div>
+
+      <Footer />
     </>
   )
 }
-  export default Dashboard
+
+export default Dashboard

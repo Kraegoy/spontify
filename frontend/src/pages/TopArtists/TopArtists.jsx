@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react'
 import { getTopArtists, getMe, getArtist } from '../../api'
 import './TopArtists.css'
 import Navbar from '../../components/Navbar/Navbar'
+import Footer from '../../components/Footer/Footer'
+
 import { useParams, useNavigate } from "react-router-dom"
 import '../../index.css'
 import '../../index.css'
@@ -109,6 +111,7 @@ function TopArtists() {
           )}
         </div>
       </div>
+      <Footer/>
     </>
 
   )

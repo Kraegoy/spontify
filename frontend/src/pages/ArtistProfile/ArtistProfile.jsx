@@ -5,6 +5,8 @@ import './ArtistProfile.css'
 import Navbar from '../../components/Navbar/Navbar'
 import '../../index.css'
 import Loading from '../../components/Loading/Loading'
+import Footer from '../../components/Footer/Footer'
+
 
 
 
@@ -354,81 +356,91 @@ function ArtistProfile() {
       .finally(() => setLoading(false))
   }, [artistID])
 
-  if (loading) return <Loading />
-  if (!artist) return <div>Artist not found</div>
 
   const topTracks = artistTopTracks?.toptracks?.track || []
 
   return (
     <>      
       <Navbar />
-      <div className="artist-profile">
-        <div
-          className="artist-profile__bg"
-          style={{ '--artist-bg': `url(${artist.images?.[0]?.url})` }}
-        />
-        <div className="artist-profile__hero">
-          <img
-            className="artist-profile__img"
-            src={artist.images?.[0]?.url}
-            alt={artist.name}
+
+      {loading ? (
+        <Loading />
+      ): !artist ? (
+        <div>Artist not found</div>
+      ) : (
+        <>
+        <div className="artist-profile">
+          <div
+            className="artist-profile__bg"
+            style={{ '--artist-bg': `url(${artist.images?.[0]?.url})` }}
           />
-          <div className="artist-profile__overlay">
-            <div className="artist-profile__type">Artist</div>
-            <div className="artist-profile__name">{artist.name}</div>
-            <div className="artist-profile__genres">
-              {artist.genres?.map(genre => (
-                <span key={genre} className="artist-profile__genre">{genre}</span>
-              ))}
+          <div className="artist-profile__hero">
+            <img
+              className="artist-profile__img"
+              src={artist.images?.[0]?.url}
+              alt={artist.name}
+            />
+            <div className="artist-profile__overlay">
+              <div className="artist-profile__type">Artist</div>
+              <div className="artist-profile__name">{artist.name}</div>
+              <div className="artist-profile__genres">
+                {artist.genres?.map(genre => (
+                  <span key={genre} className="artist-profile__genre">{genre}</span>
+                ))}
+              </div>
+              <a
+                className="artist-profile__spotify-btn"
+                href={artist.external_urls?.spotify}
+                target="_blank"
+                rel="noreferrer"
+              >
+                Open in Spotify
+              </a>
             </div>
-            <a
-              className="artist-profile__spotify-btn"
-              href={artist.external_urls?.spotify}
-              target="_blank"
-              rel="noreferrer"
-            >
-              Open in Spotify
-            </a>
+          </div>
+
+          {albums.length > 0 && (
+            <div className="albums-section">
+              <div className="albums-header">
+                <span className="albums-title">Discography</span>
+                <span className="albums-count">{albums.length} releases</span>
+              </div>
+              <div className="albums-grid">
+                {albums.map((album) => (
+                  <ArtistAlbums key={album.id} album={album} />
+                ))}
+              </div>
+            </div>
+          )}
+
+          {topTracks.length > 0 && (
+            <div className="popular-tracks-section">
+              <div className="popular-tracks-header">
+                <h2 className="popular-tracks-title">Popular Tracks</h2>
+              </div>
+
+              <div className="popular-tracks-row">
+                {topTracks.map((t, i) => (
+                  <TopTrackCard
+                    key={`${t.name}-${t.artist?.name}-${i}`}
+                    track={t}
+                    delay={i * 240}
+                    token={token}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+
+          <div className="artist-info-container">
+            <ArtistInfo artistInfo={artistInfo} artistImg={artist.images?.[0]?.url} />
           </div>
         </div>
+            
+        <Footer />
+        </>
 
-        {albums.length > 0 && (
-          <div className="albums-section">
-            <div className="albums-header">
-              <span className="albums-title">Discography</span>
-              <span className="albums-count">{albums.length} releases</span>
-            </div>
-            <div className="albums-grid">
-              {albums.map((album) => (
-                <ArtistAlbums key={album.id} album={album} />
-              ))}
-            </div>
-          </div>
-        )}
-
-        {topTracks.length > 0 && (
-          <div className="popular-tracks-section">
-            <div className="popular-tracks-header">
-              <h2 className="popular-tracks-title">Popular Tracks</h2>
-            </div>
-
-            <div className="popular-tracks-row">
-              {topTracks.map((t, i) => (
-                <TopTrackCard
-                  key={`${t.name}-${t.artist?.name}-${i}`}
-                  track={t}
-                  delay={i * 240}
-                  token={token}
-                />
-              ))}
-            </div>
-          </div>
-        )}
-
-        <div className="artist-info-container">
-          <ArtistInfo artistInfo={artistInfo} artistImg={artist.images?.[0]?.url} />
-        </div>
-      </div>
+      )}
     </>
 
   )

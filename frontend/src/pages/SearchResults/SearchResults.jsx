@@ -4,7 +4,10 @@ import { searchItem, callNextApiUrl } from '../../api'
 import './SearchResults.css'
 import Navbar from '../../components/Navbar/Navbar'
 import Loading from '../../components/Loading/Loading'
+import Footer from '../../components/Footer/Footer'
+
 import '../../index.css'
+
 
 const DEFAULT_IMG = '/spontify logo.png'
 
@@ -106,6 +109,100 @@ function PlaylistCard({ playlist }) {
   )
 }
 
+function AudiobookCard({ audiobook }) {
+  const image = audiobook.images?.[0]?.url
+  const url = audiobook.external_urls?.spotify
+  const authors = audiobook.authors?.map(a => a.name).join(', ')
+
+  return (
+    <a href={url} target="_blank" rel="noreferrer" className="sr-audiobook-card">
+      <div className="sr-audiobook-img-wrap">
+        <img
+          className={`sr-audiobook-img ${!image ? 'sr-img--default' : ''}`}
+          src={image || DEFAULT_IMG}
+          alt={audiobook.name}
+        />
+        <div className="sr-audiobook-badge">Audiobook</div>
+      </div>
+      <div className="sr-audiobook-info">
+        <div className="sr-audiobook-name">{audiobook.name}</div>
+        <div className="sr-audiobook-meta">
+          {authors && <span className="sr-audiobook-author">{authors}</span>}
+          {audiobook.total_chapters && (
+            <>
+              <span className="sr-dot">·</span>
+              <span>{audiobook.total_chapters} ch</span>
+            </>
+          )}
+        </div>
+      </div>
+    </a>
+  )
+}
+
+function EpisodeCard({ episode }) {
+  const image = episode.images?.[0]?.url
+  const url = episode.external_urls?.spotify
+  const duration = episode.duration_ms ? msToTime(episode.duration_ms) : null
+  const releaseDate = episode.release_date
+    ? new Date(episode.release_date).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })
+    : null
+
+  return (
+    <a href={url} target="_blank" rel="noreferrer" className="sr-episode-card">
+      <div className="sr-episode-img-wrap">
+        <img
+          className={`sr-episode-img ${!image ? 'sr-img--default' : ''}`}
+          src={image || DEFAULT_IMG}
+          alt={episode.name}
+        />
+      </div>
+      <div className="sr-episode-info">
+        <div className="sr-episode-name">{episode.name}</div>
+        <div className="sr-episode-desc">{episode.description}</div>
+        <div className="sr-episode-meta">
+          {releaseDate && <span>{releaseDate}</span>}
+          {duration && (
+            <>
+              <span className="sr-dot">·</span>
+              <span>{duration}</span>
+            </>
+          )}
+        </div>
+      </div>
+    </a>
+  )
+}
+
+function ShowCard({ show }) {
+  const image = show.images?.[0]?.url
+  const url = show.external_urls?.spotify
+
+  return (
+    <a href={url} target="_blank" rel="noreferrer" className="sr-album-card">
+      <div className="sr-album-img-wrap">
+        <img
+          className={`sr-album-img ${!image ? 'sr-img--default' : ''}`}
+          src={image || DEFAULT_IMG}
+          alt={show.name}
+        />
+      </div>
+      <div className="sr-album-info">
+        <div className="sr-album-name">{show.name}</div>
+        <div className="sr-album-meta">
+          <span className="sr-album-type">Podcast</span>
+          {show.total_episodes && (
+            <>
+              <span className="sr-dot">·</span>
+              <span>{show.total_episodes} eps</span>
+            </>
+          )}
+        </div>
+      </div>
+    </a>
+  )
+}
+
 function Section({ title, count, next, onLoadMore, loadingMore, children }) {
   if (!count) return null
   return (
@@ -137,14 +234,19 @@ function SearchResults() {
   const [artists, setArtists] = useState([])
   const [albums, setAlbums] = useState([])
   const [playlists, setPlaylists] = useState([])
+  const [audioBooks, setAudioBooks] = useState([])
+  const [episodes, setEpisodes] = useState([])
+  const [shows, setShows] = useState([])
 
   const [nextTracks, setNextTracks] = useState(null)
   const [nextArtists, setNextArtists] = useState(null)
   const [nextAlbums, setNextAlbums] = useState(null)
   const [nextPlaylists, setNextPlaylists] = useState(null)
-
+  const [nextAudioBooks, setNextAudioBooks] = useState(null)
+  const [nextEpisodes, setNextEpisodes] = useState(null)
+  const [nextShows, setNextShows] = useState(null)
   const [loadingMore, setLoadingMore] = useState({
-    tracks: false, artists: false, albums: false, playlists: false
+    tracks: false, artists: false, albums: false, playlists: false, audioBooks: false, episodes: false, shows: false
   })
 
   useEffect(() => {
@@ -154,6 +256,10 @@ function SearchResults() {
     setArtists([])
     setAlbums([])
     setPlaylists([])
+    setAudioBooks([])
+    setEpisodes([])
+    setShows([])
+
     searchItem(q)
       .then(res => {
         const data = res?.data
@@ -161,10 +267,17 @@ function SearchResults() {
         setArtists(data?.artists?.items?.filter(Boolean) || [])
         setAlbums(data?.albums?.items?.filter(Boolean) || [])
         setPlaylists(data?.playlists?.items?.filter(Boolean) || [])
+        setEpisodes(data?.episodes?.items?.filter(Boolean) || [])
+        setShows(data?.shows?.items?.filter(Boolean) || [])
+        setAudioBooks(data?.audiobooks?.items?.filter(Boolean) || [])
+
         setNextTracks(data?.tracks?.next || null)
         setNextArtists(data?.artists?.next || null)
         setNextAlbums(data?.albums?.next || null)
         setNextPlaylists(data?.playlists?.next || null)
+        setNextAudioBooks(data?.audiobooks?.next || null)
+        setNextEpisodes(data?.episodes?.next || null)
+        setNextShows(data?.shows?.next || null)
       })
       .catch(err => console.log("error", err))
       .finally(() => setLoading(false))
@@ -187,76 +300,123 @@ function SearchResults() {
     }
   }
 
-  if (loading) return <Loading />
 
-    return (
+  return (
     <>
-        <Navbar />
+      <Navbar />
+      { loading ? (
+        <Loading />
+      ) : (
+
+        <>
         <div className="sr-root">
-        <div className="sr-hero">
+          <div className="sr-hero">
             <div className="sr-hero-label">Search results for</div>
             <h1 className="sr-hero-query">"{q}"</h1>
-        </div>
+          </div>
 
-        <div className="sr-content">
+          <div className="sr-content">
 
             {/* Tracks + Albums side by side */}
             <div className="sr-two-col">
-            <Section
+              <Section
                 title="Tracks" count={tracks.length}
                 next={nextTracks} loadingMore={loadingMore.tracks}
                 onLoadMore={() => loadMore('tracks', nextTracks, setTracks, setNextTracks)}
-            >
+              >
                 <div className="sr-track-list">
-                {tracks.map((track, i) => (
+                  {tracks.map((track, i) => (
                     <TrackRow key={`${track.id}-${i}`} track={track} index={i} />
-                ))}
+                  ))}
                 </div>
-            </Section>
+              </Section>
 
-            <Section
+              <Section
                 title="Albums" count={albums.length}
                 next={nextAlbums} loadingMore={loadingMore.albums}
                 onLoadMore={() => loadMore('albums', nextAlbums, setAlbums, setNextAlbums)}
-            >
+              >
                 <div className="sr-grid sr-grid--2col">
-                {albums.map((album, i) => (
+                  {albums.map((album, i) => (
                     <AlbumCard key={`${album.id}-${i}`} album={album} />
-                ))}
+                  ))}
                 </div>
-            </Section>
+              </Section>
             </div>
 
             {/* Artists - full width */}
             <Section
-            title="Artists" count={artists.length}
-            next={nextArtists} loadingMore={loadingMore.artists}
-            onLoadMore={() => loadMore('artists', nextArtists, setArtists, setNextArtists)}
+              title="Artists" count={artists.length}
+              next={nextArtists} loadingMore={loadingMore.artists}
+              onLoadMore={() => loadMore('artists', nextArtists, setArtists, setNextArtists)}
             >
-            <div className="sr-grid">
+              <div className="sr-grid">
                 {artists.map((artist, i) => (
-                <ArtistCard key={`${artist.id}-${i}`} artist={artist} navigate={navigate} />
+                  <ArtistCard key={`${artist.id}-${i}`} artist={artist} navigate={navigate} />
                 ))}
-            </div>
+              </div>
             </Section>
 
             {/* Playlists - full width */}
             <Section
-            title="Playlists" count={playlists.length}
-            next={nextPlaylists} loadingMore={loadingMore.playlists}
-            onLoadMore={() => loadMore('playlists', nextPlaylists, setPlaylists, setNextPlaylists)}
+              title="Playlists" count={playlists.length}
+              next={nextPlaylists} loadingMore={loadingMore.playlists}
+              onLoadMore={() => loadMore('playlists', nextPlaylists, setPlaylists, setNextPlaylists)}
             >
-            <div className="sr-grid">
+              <div className="sr-grid">
                 {playlists.map((playlist, i) => (
-                <PlaylistCard key={`${playlist.id}-${i}`} playlist={playlist} />
+                  <PlaylistCard key={`${playlist.id}-${i}`} playlist={playlist} />
                 ))}
-            </div>
+              </div>
             </Section>
 
+            {/* Shows (Podcasts) - full width */}
+            <Section
+              title="Podcasts & Shows" count={shows.length}
+              next={nextShows} loadingMore={loadingMore.shows}
+              onLoadMore={() => loadMore('shows', nextShows, setShows, setNextShows)}
+            >
+              <div className="sr-grid">
+                {shows.map((show, i) => (
+                  <ShowCard key={`${show.id}-${i}`} show={show} />
+                ))}
+              </div>
+            </Section>
+
+            {/* Audiobooks - full width */}
+            <Section
+              title="Audiobooks" count={audioBooks.length}
+              next={nextAudioBooks} loadingMore={loadingMore.audioBooks}
+              onLoadMore={() => loadMore('audiobooks', nextAudioBooks, setAudioBooks, setNextAudioBooks)}
+            >
+              <div className="sr-grid">
+                {audioBooks.map((book, i) => (
+                  <AudiobookCard key={`${book.id}-${i}`} audiobook={book} />
+                ))}
+              </div>
+            </Section>
+
+            {/* Episodes - full width list */}
+            <Section
+              title="Episodes" count={episodes.length}
+              next={nextEpisodes} loadingMore={loadingMore.episodes}
+              onLoadMore={() => loadMore('episodes', nextEpisodes, setEpisodes, setNextEpisodes)}
+            >
+              <div className="sr-episode-list">
+                {episodes.map((episode, i) => (
+                  <EpisodeCard key={`${episode.id}-${i}`} episode={episode} />
+                ))}
+              </div>
+            </Section>
+
+          </div>
         </div>
-        </div>
+
+        <Footer/>
+        </>
+      )}
     </>
-    )
+  )
 }
 
 export default SearchResults

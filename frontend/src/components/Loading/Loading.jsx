@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import "./Loading.css";
+import Navbar from '../Navbar/Navbar'
 
 function Loading() {
   const [tick, setTick] = useState(0);
@@ -12,6 +13,7 @@ function Loading() {
   }, []);
 
   return (
+    <>
     <div className="loader-root">
       <div className="loader-inner">
         <div className="loader-bars">
@@ -24,6 +26,7 @@ function Loading() {
         </span>
       </div>
     </div>
+    </>
   );
 }
 
