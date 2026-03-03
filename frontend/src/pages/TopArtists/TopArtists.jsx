@@ -58,6 +58,8 @@ function TopArtists() {
       .catch((err) => console.log("error", err))
       .finally(() => setLoading(false))
   }, [range])
+  
+  console.log("Art", artists)
 
   return (
     <>      

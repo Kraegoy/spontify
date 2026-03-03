@@ -76,17 +76,19 @@ export const getTrackSpotifyUrl = (artistName, trackName) => {
 export const getMe = () => api.get('/auth/spotify/me/')
 export const getMyPlaylists = () => api.get('/get_my_playlists/')
 export const getRecentlyPlayedTracks = () => api.get('/get_recently_played_tracks/')
+export const getCurrentlyPLaying = () => api.get('/get_currently_playing/')
 
 export const logoutUser = () => {
     localStorage.removeItem('access_token')
     localStorage.removeItem('refresh_token')
 }
 
-export const playTrack = (trackUri) => {
-  return api.post('/play_track/', {
-    track_uri: trackUri
-  });
+export const playTrack = async (trackUri) => {
+  const res = await api.post('/play_track/', { track_uri: trackUri });
+  return res;
 };
+
+
 
 
 export const callNextApiUrl = (nextUrl) => {
@@ -94,6 +96,8 @@ export const callNextApiUrl = (nextUrl) => {
     params: { next_url: nextUrl } 
   });
 };
+
+
 
 export const getArtistAlbums = (artistID) => {
   return api.get('/get_artist_albums/', {

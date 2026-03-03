@@ -264,7 +264,6 @@ def top_artists(request, access_token):
 
 
 # ─── Play a track ────────────────────────────────────────────────────────────
-
 @api_view(['POST'])
 @spotify_auth_required
 def play_track(request, access_token):
@@ -273,11 +272,43 @@ def play_track(request, access_token):
     if not track_uri:
         return Response({'error': 'track_uri is required'}, status=400)
 
+    headers = {'Authorization': f'Bearer {access_token}'}
+
     response = requests.put(
         "https://api.spotify.com/v1/me/player/play",
-        headers={'Authorization': f'Bearer {access_token}'},
+        headers=headers,
         json={"uris": [track_uri]}
     )
+
+    # No active device — try to find one and retry
+    if response.status_code == 404:
+        devices_response = requests.get(
+            "https://api.spotify.com/v1/me/player/devices",
+            headers=headers
+        )
+
+        if not devices_response.ok:
+            return Response({'error': 'no_device', 'message': 'No active Spotify device found'}, status=404)
+
+        devices = devices_response.json().get("devices", [])
+        if not devices:
+            return Response({'error': 'no_device', 'message': 'No active Spotify device found'}, status=404)
+
+        device_id = devices[0]["id"]
+
+        # Transfer playback to device first
+        requests.put(
+            "https://api.spotify.com/v1/me/player",
+            headers=headers,
+            json={"device_ids": [device_id], "play": False}
+        )
+
+        # Retry play on that device
+        response = requests.put(
+            f"https://api.spotify.com/v1/me/player/play?device_id={device_id}",
+            headers=headers,
+            json={"uris": [track_uri]}
+        )
 
     if response.status_code == 204:
         return Response({"ok": True}, status=200)
@@ -286,7 +317,6 @@ def play_track(request, access_token):
         return Response({'error': 'Failed to play track', 'status': response.status_code}, status=response.status_code)
 
     return Response(response.json())
-
 
 # ─── Logout ──────────────────────────────────────────────────────────────────
 
@@ -545,7 +575,7 @@ def get_recently_played_tracks(request, access_token):
         return Response({'error': 'Failed to fetch recently played tracks', 'status': response.status_code}, status=response.status_code)
     
     data = response.json()
-    cache.set(cache_key, data, timeout=60*10)
+    cache.set(cache_key, data, timeout=60*5)
     
     return Response(data)
 
@@ -612,3 +642,22 @@ def search_item(request, access_token):
     cache.set(cache_key, data, timeout=60 * 10)
 
     return Response(data)
+
+
+
+@api_view(["GET"])
+@spotify_auth_required
+def get_currently_playing(request, access_token):
+    response = requests.get(
+        "https://api.spotify.com/v1/me/player/currently-playing",
+        params={"additional_types": "track"},
+        headers={"Authorization": f"Bearer {access_token}"}
+    )
+
+    if response.status_code == 204 or not response.content:
+        return Response({"is_playing": False}, status=200)
+
+    if not response.ok:
+        return Response({"error": "Failed to get currently playing", "status": response.status_code}, status=response.status_code)
+
+    return Response(response.json())
