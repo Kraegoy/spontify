@@ -669,7 +669,6 @@ body {
   flex-direction: row;
   gap: 20px;
   flex-shrink: 0;
-  margin-left: auto;
 }
 
 .ttm-carousel {
