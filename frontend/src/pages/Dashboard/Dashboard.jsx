@@ -14,11 +14,12 @@ function msToTime(ms) {
   return `${minutes}:${seconds.toString().padStart(2, '0')}`
 }
 
-function RecentlyPlayedTrackCard({ item }) {
+function RecentlyPlayedTrackCard({ item, currentlyPlaying, onPlay, isActiveCard }) {
   const track = item?.track
   const image = track?.album?.images?.[0]?.url
   const artist = track?.artists?.map(a => a.name).join(", ")
   const url = track?.external_urls?.spotify
+  const isPlaying = currentlyPlaying?.item?.name === track?.name && isActiveCard
   const playedAt = item?.played_at
     ? new Date(item.played_at).toLocaleString(undefined, {
         month: 'short', day: 'numeric',
@@ -30,7 +31,7 @@ function RecentlyPlayedTrackCard({ item }) {
 
   return (
     <a href={url} target="_blank" rel="noreferrer" className="rp-card-link">
-      <div className="rp-card">
+      <div className={`rp-card ${isPlaying ? 'rp-card--active' : ''}`}>
         <div className="rp-card__img-wrap">
           {image
             ? <img className="rp-card__img" src={image} alt={track.name} />
@@ -41,6 +42,18 @@ function RecentlyPlayedTrackCard({ item }) {
           <div className="rp-card__name" title={track.name}>{track.name}</div>
           <div className="rp-card__artist" title={artist}>{artist}</div>
           {playedAt && <div className="rp-card__played-at">{playedAt}</div>}
+          <button
+            className={`rp-card__play ${isPlaying ? 'rp-card__play--active' : ''}`}
+            onClick={e => { e.preventDefault(); e.stopPropagation(); onPlay(track); }}
+          >
+            {isPlaying ? (
+              <div className="rp-card__bars">
+                {[...Array(4)].map((_, i) => (
+                  <span key={i} className="rp-card__bar" style={{ '--i': i }} />
+                ))}
+              </div>
+            ) : '▶'}
+          </button>
         </div>
       </div>
     </a>
@@ -405,6 +418,12 @@ function Dashboard() {
   const handlePlay = async (track) => {
     try {
       await playTrack(track.uri);
+      // Optimistically update so active state switches immediately
+      setCurrentlyPlaying(prev => ({
+        ...prev,
+        is_playing: true,
+        item: track,
+      }));
     } catch (err) {
       if (err.response?.data?.error === 'no_device') {
         setNoDeviceTrack(track);
@@ -545,12 +564,22 @@ function Dashboard() {
                   <div className="track-list">
                     {tracks.map((track, i) => (
                       <div
-                        className="track-item"
+                        className={`track-item ${currentlyPlaying?.item?.name === track.name ? 'track-item--active' : ''}`}
                         key={track.id}
                         onClick={() => handlePlay(track)}
                       >
-                        <div className="track-num">{i + 1}</div>
-                        <div className="track-play">▶</div>
+                        <div className="track-num">
+                          {currentlyPlaying?.item?.name === track.name ? (
+                            <div className="rp-card__bars">
+                              {[...Array(4)].map((_, j) => (
+                                <span key={j} className="rp-card__bar" style={{ '--i': j }} />
+                              ))}
+                            </div>
+                          ) : i + 1}
+                        </div>
+                        {currentlyPlaying?.item?.name !== track.name && (
+                          <div className="track-play">▶</div>
+                        )}
                         {track.album?.images?.[0]?.url
                           ? <img className="track-img" src={track.album.images[0].url} alt={track.album.name} />
                           : <div className="track-img-placeholder">♪</div>
@@ -586,9 +615,20 @@ function Dashboard() {
                   <span className="panel-count">{recentlyPlayed.length} tracks</span>
                 </div>
                 <div className="rp-grid">
-                  {recentlyPlayed.map((item) => (
-                    <RecentlyPlayedTrackCard key={item?.played_at} item={item} />
-                  ))}
+                  {recentlyPlayed.map((item, index) => {
+                    const firstIndex = recentlyPlayed.findIndex(
+                      i => i.track?.name === currentlyPlaying?.item?.name
+                    );
+                    return (
+                      <RecentlyPlayedTrackCard
+                        key={item?.played_at}
+                        item={item}
+                        currentlyPlaying={currentlyPlaying}
+                        onPlay={handlePlay}
+                        isActiveCard={index === firstIndex}
+                      />
+                    );
+                  })}
                 </div>
                 {nextUrl && recentlyPlayed.length < 50 && (
                   <div

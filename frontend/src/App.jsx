@@ -7,11 +7,9 @@ import MyPlaylists from './pages/MyPlaylists/MyPlaylists'
 import SearchResults from './pages/SearchResults/SearchResults'
 import Loading from './components/Loading/Loading'
 
-
 import { useState, useEffect } from 'react'
-import { getMe } from './api'
+import { getMe, setApiBlocked } from './api'
 
-// ── Save token immediately, before any component mounts ──
 const params = new URLSearchParams(window.location.search)
 const access = params.get('access')
 const refresh = params.get('refresh')
@@ -19,6 +17,27 @@ if (access) {
   localStorage.setItem('access_token', access)
   localStorage.setItem('refresh_token', refresh)
   window.history.replaceState({}, document.title, '/dashboard')
+}
+
+function RateLimitPage({ onRetry }) {
+  const [countdown, setCountdown] = useState(30);
+
+  useEffect(() => {
+    if (countdown <= 0) { onRetry(); return; }
+    const t = setTimeout(() => setCountdown(c => c - 1), 1000);
+    return () => clearTimeout(t);
+  }, [countdown]);
+
+  return (
+    <div className="error-page">
+      <div className="error-page__icon">⏳</div>
+      <div className="error-page__title">Rate Limit Reached</div>
+      <div className="error-page__msg">
+        Spotify is throttling requests. Retrying in <strong>{countdown}s</strong>
+      </div>
+      <button className="error-page__btn" onClick={onRetry}>Retry Now</button>
+    </div>
+  );
 }
 
 function PrivateRoute({ children }) {
@@ -41,47 +60,57 @@ function PrivateRoute({ children }) {
   }, [])
 
   if (valid === null || !minDelay) return <Loading message="" />
-
   return valid ? children : <Navigate to="/" />
 }
 
 function App() {
+  const [apiError, setApiError] = useState(null);
+
+  useEffect(() => {
+    const onRateLimit = () => {
+      setApiBlocked(true);
+      setApiError('ratelimit');
+    };
+    const onUnauthorized = () => {
+      localStorage.removeItem('access_token');
+      localStorage.removeItem('refresh_token');
+      window.location.href = '/';
+    };
+
+    window.addEventListener('api:ratelimit', onRateLimit);
+    window.addEventListener('api:unauthorized', onUnauthorized);
+    return () => {
+      window.removeEventListener('api:ratelimit', onRateLimit);
+      window.removeEventListener('api:unauthorized', onUnauthorized);
+    };
+  }, []);
+
+  const handleRetry = () => {
+    setApiBlocked(false);
+    setApiError(null);
+  };
+
+  if (apiError === 'ratelimit') return <RateLimitPage onRetry={handleRetry} />;
+
   return (
     <BrowserRouter>
       <Routes>
-
         <Route path="/" element={<Login />} />
-
         <Route path="/dashboard/:timeRange?" element={
-          <PrivateRoute>
-            <Dashboard />
-          </PrivateRoute>
+          <PrivateRoute><Dashboard /></PrivateRoute>
         } />
-
         <Route path="/top_artists/:timeRange" element={
-          <PrivateRoute>
-            <TopArtists />
-          </PrivateRoute>
+          <PrivateRoute><TopArtists /></PrivateRoute>
         } />
-
-         <Route path="/search" element={
-          <PrivateRoute>
-            <SearchResults />
-          </PrivateRoute>
+        <Route path="/search" element={
+          <PrivateRoute><SearchResults /></PrivateRoute>
         } />
-
         <Route path="/artist/:artistID" element={
-          <PrivateRoute>
-            <ArtistProfile />
-          </PrivateRoute>
+          <PrivateRoute><ArtistProfile /></PrivateRoute>
         } />
-
         <Route path="/my_playlists" element={
-          <PrivateRoute>
-            <MyPlaylists />
-          </PrivateRoute>
+          <PrivateRoute><MyPlaylists /></PrivateRoute>
         } />
-
       </Routes>
     </BrowserRouter>
   )

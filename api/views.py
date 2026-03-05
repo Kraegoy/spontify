@@ -2,6 +2,8 @@ import requests
 from datetime import timedelta
 from urllib.parse import urlencode
 import hashlib
+from django_ratelimit.decorators import ratelimit
+
 
 from django.conf import settings
 from django.contrib.auth.models import User
@@ -20,21 +22,32 @@ from django.core.cache import cache
 
 from functools import wraps
 
+@api_view(['GET'])
+def health_check(request):
+    return Response({'status': 'ok'})
+
+
+def ratelimit_error(request, exception):
+    return JsonResponse({'error': 'rate_limited'}, status=429)
+
 def spotify_auth_required(func):
     @wraps(func)
+    @ratelimit(key='ip', rate='20/m', block=True)
     def wrapper(request, *args, **kwargs):
         if not request.user.is_authenticated:
-            return Response({'error': 'Not logged in'}, status=401)
+            return Response({'error': 'not_authenticated'}, status=401)
         
         access_token = get_valid_token(request.user)
         if not access_token:
-            return Response({'error': 'No Spotify token found'}, status=401)
+            return Response({'error': 'token_expired'}, status=401)
         
-        # Pass token to the view
         return func(request, *args, access_token=access_token, **kwargs)
     return wrapper
 
+
+
 @api_view(['GET'])
+@ratelimit(key='ip', rate='10/m', block=True)
 def spotify_login(request):
     scopes = ' '.join([
         'user-read-private',
@@ -64,6 +77,7 @@ def spotify_login(request):
 # ─── Step 2: Spotify sends user back here with a code ───────────────────────
 
 @csrf_exempt
+@ratelimit(key='ip', rate='10/m', block=True)
 def spotify_callback(request):
     code = request.GET.get('code')
     error = request.GET.get('error')

@@ -5,14 +5,41 @@ const api = axios.create({
     baseURL: API_BASE_URL,
 })
 
-// Attach JWT to every request
+export let apiBlocked = false;
+export const setApiBlocked = (val) => { apiBlocked = val; };
+
+// Attach JWT + block requests when rate limited
 api.interceptors.request.use((config) => {
+    if (apiBlocked) {
+        return Promise.reject({ isBlocked: true });
+    }
     const token = localStorage.getItem('access_token')
     if (token) {
         config.headers.Authorization = `Bearer ${token}`
     }
     return config
 })
+
+api.interceptors.response.use(
+  response => response,
+  error => {
+    if (error.isBlocked) return Promise.reject(error);
+
+    const status = error.response?.status;
+
+    if (status === 429) {
+      setApiBlocked(true);
+      window.dispatchEvent(new CustomEvent('api:ratelimit'));
+    }
+
+    if (status === 401) {
+      window.dispatchEvent(new CustomEvent('api:unauthorized'));
+    }
+
+    return Promise.reject(error);
+  }
+)
+
 
 export const getTopTracks = (timeRange) => {
   return api.get('/top_tracks/', {

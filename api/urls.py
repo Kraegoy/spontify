@@ -23,5 +23,6 @@ urlpatterns = [
     path('get_currently_playing/', views.get_currently_playing, name="get_currently_playing"),
 
 
+    path('health_check/', views.health_check, name="health_check"),
 
 ]

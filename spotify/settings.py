@@ -17,9 +17,9 @@ LAST_FM_SHARED_SECRET = os.environ.get('LAST_FM_SHARED_SECRET')
 
 SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY')
 
-DEBUG = True
+DEBUG = os.environ.get('DEBUG', 'False') == 'True'
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '').split(',')
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -36,6 +36,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware', 
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -86,12 +87,17 @@ USE_TZ = True
 STATIC_URL = 'static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+
 # ─── CORS ────────────────────────────────────────────────────────────────────
 
 CORS_ALLOWED_ORIGINS = [
     'http://localhost:5173',
     'http://127.0.0.1:5173',
+    os.environ.get('FRONTEND_URL', ''),
 ]
+
 CORS_ALLOW_CREDENTIALS = True
 
 # ─── REST Framework + JWT ────────────────────────────────────────────────────
@@ -113,3 +119,5 @@ CACHES = {
         "LOCATION": "/tmp/django_cache",
     }
 }
+
+RATELIMIT_VIEW = 'api.views.ratelimit_error'
