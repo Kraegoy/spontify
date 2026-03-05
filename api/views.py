@@ -32,7 +32,7 @@ def ratelimit_error(request, exception):
 
 def spotify_auth_required(func):
     @wraps(func)
-    @ratelimit(key='ip', rate='20/m', block=True)
+    @ratelimit(key='ip', rate='100/m', block=True)
     def wrapper(request, *args, **kwargs):
         if not request.user.is_authenticated:
             return Response({'error': 'not_authenticated'}, status=401)
