@@ -22,6 +22,56 @@ from django.core.cache import cache
 
 from functools import wraps
 
+import json
+from django.views.decorators.http import require_http_methods
+from django.core.mail import send_mail
+from django.conf import settings
+
+
+@csrf_exempt
+@require_http_methods(["POST"])
+def request_access(request):
+    """
+    Receives an email from the login page and:
+    1. Sends YOU a notification so you can add them as a Spotify test user.
+    2. Returns a success response to the frontend.
+    """
+    try:
+        body = json.loads(request.body)
+        email = body.get("email", "").strip().lower()
+    except (json.JSONDecodeError, AttributeError):
+        return JsonResponse({"error": "Invalid request body."}, status=400)
+
+    if not email or "@" not in email:
+        return JsonResponse({"error": "A valid email address is required."}, status=400)
+
+    # Notify yourself
+    try:
+        send_mail(
+            subject=f"[Spontify] New test user request: {email}",
+            message=(
+                f"Someone wants to try Spontify!\n\n"
+                f"Email: {email}\n\n"
+                f"Go to your Spotify Developer Dashboard and add this email "
+                f"under Users and Access > Add New User:\n"
+                f"https://developer.spotify.com/dashboard"
+            ),
+            from_email=settings.EMAIL_HOST_USER,
+            recipient_list=['avilakraeg@gmail.com'],
+            fail_silently=False,
+        )
+    except Exception as e:
+        # Log but don't expose internals to frontend
+        print(f"[request_access] Failed to send email: {e}")
+        return JsonResponse(
+            {"error": "Failed to send request. Please try again later."},
+            status=500,
+        )
+
+    return JsonResponse({"success": True}, status=200)
+
+
+
 @api_view(['GET', 'HEAD'])
 def health_check(request):
     return Response({'status': 'ok'})

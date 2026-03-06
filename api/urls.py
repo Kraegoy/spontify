@@ -24,5 +24,6 @@ urlpatterns = [
 
 
     path('health_check/', views.health_check, name="health_check"),
+    path('request_access/', views.request_access, name="request_access"),
 
 ]

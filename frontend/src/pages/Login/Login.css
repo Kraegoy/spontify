@@ -131,3 +131,113 @@
   height: 22px;
   object-fit: contain;
 }
+
+
+/* divider */
+.login-divider {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--text-muted);
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+}
+
+.login-divider::before,
+.login-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--surface2);
+}
+
+/* access section */
+.login-access-section {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.login-access-label {
+  margin: 0;
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  color: var(--text-dim);
+  text-align: center;
+  line-height: 1.5;
+}
+
+.login-input-row {
+  display: flex;
+  gap: 8px;
+  width: 100%;
+}
+
+.login-email-input {
+  flex: 1;
+  padding: 11px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--surface2);
+  background: var(--black);
+  color: var(--text);
+  font-family: 'DM Mono', monospace;
+  font-size: 12px;
+  outline: none;
+  transition: border-color 0.15s ease;
+}
+
+.login-email-input::placeholder {
+  color: var(--text-muted);
+}
+
+.login-email-input:focus {
+  border-color: var(--green);
+}
+
+.login-email-input:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.login-access-btn {
+  padding: 11px 18px;
+  border-radius: 999px;
+  border: 1px solid var(--green);
+  background: transparent;
+  color: var(--green);
+  font-family: 'Syne', sans-serif;
+  font-weight: 700;
+  font-size: 12px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.login-access-btn:hover:not(:disabled) {
+  background: var(--green);
+  color: var(--black);
+}
+
+.login-access-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* status message */
+.login-access-msg {
+  margin: 0;
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  text-align: center;
+  line-height: 1.5;
+}
+
+.login-access-msg.success {
+  color: var(--green);
+}
+
+.login-access-msg.error {
+  color: #ff5f5f;
+}
